@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="styles.css">
+
+  <div class="banner">
+    <div>
+      <h1></h1>
+    </div>  
+  </div>
+
+  <title>NoWhere2Hide</title>
+  
+</head>
+
+<div class="topnav" id="myTopnav">
+  <a href="/" class="active">C2s</a>
+  <a href="/runscan.html">Run Scan</a>
+  <a href="/banner.html">Banner Database</a>
+  <a href="/http.html">HTTP Database</a>
+  <a href="/tls.html">TLS Database</a>
+  <a href="/jarm.html">JARM Database</a>
+  <a href="/new_sig.html">Create New Signature</a>
+  <a href="/view_sigs.html">View / Edit Signatures</a>
+  <a href="/readme.html">Readme</a>
+</div>
+
+<body>
+  
+  
+
+  <h1>C2 Results</h1>
+  <!-- 
+    Specify the table that will be used to display the people database
+  -->
+  <table class="PTABLE">
+   
+      <th>Address</th>
+      <th>Port</th>
+      <th>Malware Family</th>
+    </tr>
+  </table>
+  <br/>
+  <!-- 
+    Script runs on each page load to update the people database
+   -->
+  <script>
+    c2s()
+    
+    function c2s()
+    {
+      
+      c2Table = document.querySelector("table")
+      
+      for(var i = 1;i<c2Table.rows.length;){
+      c2Table.deleteRow(i);
+        }
+
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const mf = urlParams.get('malware_family');
+    
+    fetch("/C2query",{method: "POST",body: new URLSearchParams({'malware':mf})})
+
+
+      .then(response => response.json()) // Read the JSON body of the response
+      .then(c2List => {
+        c2List.forEach(c2 => {
+          // Create the table row
+          row = document.createElement("tr") 
+          // Create the table data elements and extract corresponding values from received `person`
+          nama = document.createElement("td") 
+          nama.innerHTML = c2.IP
+          birthday = document.createElement("td")
+          birthday.innerHTML = c2.Port
+          occupation = document.createElement("td")
+          occupation.innerHTML = c2.Malware_Family
+          // Add the data elements to the row
+          row.appendChild(nama)
+          row.appendChild(birthday)
+          row.appendChild(occupation)
+          // Add the row element to the table
+          c2Table.appendChild(row)
+        })
+      })
+    }
+  </script>
+</body>
+
+</html>

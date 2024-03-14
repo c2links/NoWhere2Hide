@@ -1,0 +1,43 @@
+rule_name: Sliver_Multiplayer_Cert
+guid: 1eaf19a9-705f-4cd6-b54b-f16adcc6f7c1
+family: Sliver
+version: ""
+description: 'Simple query -  based on "operators" and "multiplayer" certificate values
+  related to Sliver Team Servers. '
+classification: OST
+references:
+- https://twitter.com/embee_research/status/1660922163002757120
+created: "2023-11-28 03:00:10"
+targets:
+- source: shodan
+  targetquery:
+  - ssl:multiplayer ssl:operators
+- source: censys
+  targetquery:
+  - services:(tls.certificates.leaf_data.subject.common_name:multiplayer and tls.certificates.leaf_data.issuer.common_name:operators)
+scan_banner:
+  enabled: false
+  probefile: ""
+scan_http:
+  enabled: false
+  method: ""
+  endpoint: ""
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: false
+  retryhttps: false
+  https: false
+  maxredirects: 0
+scan_tls:
+  enabled: true
+scan_jarm:
+  enabled: false
+detection:
+  module: false
+  module_name: ""
+  simple: true
+  condition: all
+  queries:
+  - table: tls
+    query: issuer_dn = 'CN=operators' AND subject_dn = 'CN=multiplayer'

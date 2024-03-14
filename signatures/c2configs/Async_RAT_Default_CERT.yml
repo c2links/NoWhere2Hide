@@ -1,0 +1,43 @@
+rule_name: Async_RAT_Default_CERT
+guid: 589b61a6-8d91-4c4d-b1c6-ed1af07d697b
+family: Async RAT
+version: ""
+description: Detects default CERT used by Async RAT
+classification: RAT
+references:
+- https://embee-research.ghost.io/shodan-censys-queries/
+created: "2023-11-28 04:23:23"
+targets:
+- source: shodan
+  targetquery:
+  - ssl:"AsyncRAT Server"
+- source: censys
+  targetquery:
+  - services.tls.certificates.leaf_data.subject.common_name:"AsyncRAT Server" or services.tls.certificates.leaf_data.issuer.common_name:"AsyncRAT
+    Server"
+scan_banner:
+  enabled: false
+  probefile: ""
+scan_http:
+  enabled: false
+  method: ""
+  endpoint: ""
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: false
+  retryhttps: false
+  https: false
+  maxredirects: 0
+scan_tls:
+  enabled: true
+scan_jarm:
+  enabled: false
+detection:
+  module: false
+  module_name: ""
+  simple: true
+  condition: all
+  queries:
+  - table: tls
+    query: issuer_common_name = 'AsyncRAT Server'

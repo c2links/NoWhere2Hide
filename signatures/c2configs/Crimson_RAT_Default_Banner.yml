@@ -1,0 +1,42 @@
+rule_name: Crimson_RAT_Default_Banner
+guid: 82f4c3a0-2cc6-44c6-9874-6c4b4acc2c60
+family: Crimson RAT
+version: ""
+description: Checks default banner of Crimson RAT
+classification: RAT
+references:
+- https://www.forescout.com/resources/the-apt36-crimson-remote-access-trojan-rat/
+created: "2023-11-27 18:10:03"
+targets:
+- source: shodan
+  targetquery:
+  - hash:467809015
+- source: censys
+  targetquery:
+  - services.banner="*info=command"
+scan_banner:
+  enabled: true
+  probefile: ""
+scan_http:
+  enabled: false
+  method: ""
+  endpoint: ""
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: false
+  retryhttps: false
+  https: false
+  maxredirects: 0
+scan_tls:
+  enabled: false
+scan_jarm:
+  enabled: false
+detection:
+  module: false
+  module_name: ""
+  simple: true
+  condition: any
+  queries:
+  - table: banner
+    query: 'banner_hex ILIKE ''%0c00000000696e666f3d636f6d6d616e64%'' '

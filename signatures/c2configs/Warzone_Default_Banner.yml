@@ -1,0 +1,49 @@
+rule_name: Warzone_Default_Banner
+guid: 94463ba7-0605-4b3f-a79f-bcf5a6032197
+family: Warzone
+version: ""
+description: Checks default banner of Warzone
+classification: Select an option
+references:
+- C2Links Research
+created: "2024-02-16 22:14:59"
+targets:
+- source: shodan
+  targetquery: []
+- source: censys
+  targetquery: []
+- source: badasn
+  targetquery: []
+- source: newdomain
+  targetquery: []
+- source: tdomain
+  targetquery: []
+- source: ipsum
+  targetquery:
+  - enabled
+scan_banner:
+  enabled: true
+  probefile: ""
+scan_http:
+  enabled: false
+  method: ""
+  endpoint: ""
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: false
+  retryhttps: false
+  https: false
+  maxredirects: 0
+scan_tls:
+  enabled: true
+scan_jarm:
+  enabled: false
+detection:
+  module: false
+  module_name: ""
+  simple: true
+  condition: any
+  queries:
+  - table: banner
+    query: banner_hex = '09123b422d33a244fc018673'

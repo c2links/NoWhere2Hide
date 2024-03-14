@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="styles.css">
+
+
+  <div class="banner">
+    <div>
+      <h1></h1>
+    </div>  
+  </div>
+
+  <title>NoWhere2Hide</title>
+  
+</head>
+
+<div class="topnav" id="myTopnav">
+  <a href="/">C2s</a>
+  <a href="/runscan.html">Run Scan</a>
+  <a href="/banner.html">Banner Database</a>
+  <a href="/http.html" class="active">HTTP Database</a>
+  <a href="/tls.html">TLS Database</a>
+  <a href="/jarm.html">JARM Database</a>
+  <a href="/new_sig.html">Create New Signature</a>
+  <a href="/view_sigs.html">View / Edit Signatures</a>
+  <a href="/clear_db.html">Clear Databases</a>
+  <a href="/readme.html">Readme</a>
+</div>
+<body>
+
+  <h1>HTTP Responses </h1>
+  <!-- 
+    Specify the table that will be used to display the people database
+  -->
+
+  <label for="pg">Enter Postgres Query to Execute: </label> 
+  <input type="text" id="pg" placeholder="banner_text ilike '%found%'" size=60>
+  <input type = "submit" onclick="query()"><br><br>
+  <b>*** The prefix will always be 'select address,port, status,banner_text,banner_hex,length,timestamp from banners where '</b><br>
+  <b>*** Enter just the where clause in the above box. For example, "banner_text ilike '%found%'"</b><br><br>
+
+  <script>
+
+    var limit = 100;
+    var offset = 0;
+    var current = 1;
+    var totalcount;
+
+    async function recordCount(){
+      const response = await fetch("/RecordCount",{method: "POST",body: new URLSearchParams({'table':"http"})});
+      const record = await response.text();
+      return record;
+    }
+
+    async function recordCountQ(){
+      const response = await fetch("/RecordCountQ",{method: "POST",body: new URLSearchParams({'table':"http",'query':pg.value})});
+      const record = await response.text();
+      return record;
+    }
+
+    function encodeHTMLEntities(text) {
+      let textArea = document.createElement('textarea');
+      textArea.innerText = text;
+      let encodedOutput=textArea.innerHTML;
+      let arr=encodedOutput.split('<br>');
+      encodedOutput=arr.join('\n');
+      return encodedOutput;
+    }
+
+  </script>
+
+  <p id="recordP"></p>
+  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button onclick="nextPage()">Next</button>
+  <table class="PTABLE" style="width: 100%;">
+    <th style="width:11%">address</th>
+    <th style="width:11%">port</th>
+    <th style="width:11%">status</th>
+    <th style="width:11%">status_line</th>
+    <th style="width:11%">status_code</th>
+    <th style="width:11%">headers</th>
+    <th style="width:11%">body</th>
+    <th style="width:11%">body_sha256</th>
+    <th style="width:11%">timestamp</th>
+    </tr>
+  </table>
+  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button onclick="nextPage()">Next</button>
+  <br/>
+  
+  <script>
+
+    control()
+
+    function nextPage() {
+      
+      if (current < totalPages) {
+        current++;
+        offset = offset + limit;
+        document.getElementById("currentDyn").innerText = current;
+        control();
+        }
+        else{control();}
+      }
+
+    function prevPage() {
+      
+      if (current > 1) {
+        current--;
+        offset = offset - limit;
+        document.getElementById("currentDyn").innerText = current;
+        control();
+        }
+        else{control();}
+    }
+
+    function query(){
+
+      offset = 0;
+      current = 1;
+
+      control()
+    }
+
+    function control()
+    {
+      var pg_query = document.getElementById("pg");
+      document.getElementById("currentDyn").innerText = current;
+
+      if (pg_query.value == ""){
+        recordCount().then(function (result){
+          totalcount = result
+          document.getElementById("recordP").innerText = "Total Results: " + totalcount;
+          totalPages = Math.ceil(totalcount/ limit);
+          var d = document.getElementById("totalDyn");
+          d.innerText = totalPages;
+        })
+        
+        http();
+      }
+        else{
+          recordCountQ().then(function (resultQ){
+            totalcount = resultQ;
+            document.getElementById("recordP").innerText = "Total Results: " + totalcount;
+            totalPages = Math.ceil(totalcount/ limit);
+            document.getElementById("totalDyn").innerText = totalPages;
+          })
+          httpQuery();}
+    
+    }
+
+    function http()
+    { 
+      httpTable = document.querySelector("table")
+      for(var i = 1;i<httpTable.rows.length;){httpTable.deleteRow(i);}
+            
+      fetch("/HTTP",{method: "POST",body: new URLSearchParams({'limit':limit,"offset":offset})})
+        .then(response => response.json()) // Read the JSON body of the response
+          .then(httpList => {
+            httpList.forEach(http => {
+
+              // Create the table row
+              row = document.createElement("tr") 
+              
+              bodyCode = "<code>" + encodeHTMLEntities(http.Body) + "</code>";
+
+              // Create the table data elements and extract corresponding values from received `person`
+              address = document.createElement("td") 
+              address.innerHTML = http.Address
+              port = document.createElement("td")
+              port.innerHTML = http.Port
+              conn_status = document.createElement("td")
+              conn_status.innerHTML = http.Status
+              status_line = document.createElement("td") 
+              status_line.innerHTML = http.Status_Line
+              status_code = document.createElement("td") 
+              status_code.innerHTML = http.Status_Code
+              headers = document.createElement("td") 
+              headers.innerHTML = http.Headers
+              body = document.createElement("td") 
+              body.innerHTML = bodyCode
+              body_sha256 = document.createElement("td") 
+              body_sha256.innerHTML = http.Body_SHA256
+              timestamp = document.createElement("td") 
+              timestamp.innerHTML = http.Timestamp
+
+              // Add the data elements to the row
+              row.appendChild(address)
+              row.appendChild(port)
+              row.appendChild(conn_status)
+              row.appendChild(status_line)
+              row.appendChild(status_code)
+              row.appendChild(headers)
+              row.appendChild(body)
+              row.appendChild(body_sha256)
+              row.appendChild(timestamp)
+              
+              // Add the row element to the table
+              httpTable.appendChild(row)
+          })
+        })
+    }
+
+    function httpQuery()
+    {
+      httpTable = document.querySelector("table")
+      
+      for(var i = 1;i<httpTable.rows.length;){httpTable.deleteRow(i);}
+
+      fetch("/HTTPquery",{method: "POST",body: new URLSearchParams({'pg':pg.value,'limit':limit,"offset":offset})})
+        .then(response => response.json()) // Read the JSON body of the response
+        .then(httpList => {
+            httpList.forEach(http => {
+
+              // Create the table row
+              row = document.createElement("tr")
+              
+              bodyCode = "<code>" + encodeHTMLEntities(http.Body) + "</code>";
+              
+              // Create the table data elements and extract corresponding values from received `person`
+              address = document.createElement("td") 
+              address.innerHTML = http.Address
+              port = document.createElement("td")
+              port.innerHTML = http.Port
+              conn_status = document.createElement("td")
+              conn_status.innerHTML = http.Status
+              status_line = document.createElement("td") 
+              status_line.innerHTML = http.Status_Line
+              status_code = document.createElement("td") 
+              status_code.innerHTML = http.Status_Code
+              headers = document.createElement("td") 
+              headers.innerHTML = http.Headers
+              body = document.createElement("td") 
+              body.innerHTML = bodyCode
+              body_sha256 = document.createElement("td") 
+              body_sha256.innerHTML = http.Body_SHA256
+              timestamp = document.createElement("td") 
+              timestamp.innerHTML = http.Timestamp
+
+              // Add the data elements to the row
+              row.appendChild(address)
+              row.appendChild(port)
+              row.appendChild(conn_status)
+              row.appendChild(status_line)
+              row.appendChild(status_code)
+              row.appendChild(headers)
+              row.appendChild(body)
+              row.appendChild(body_sha256)
+              row.appendChild(timestamp)
+              
+              // Add the row element to the table
+              httpTable.appendChild(row)
+          })
+        })
+    }
+  
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="styles.css">
+
+  <div class="banner">
+    <div>
+      <h1></h1>
+    </div>  
+  </div>
+
+  <title>NoWhere2Hide</title>
+  
+</head>
+
+<div class="topnav" id="myTopnav">
+  <a href="/" class="active">C2s</a>
+  <a href="/runscan.html">Run Scan</a>
+  <a href="/banner.html">Banner Database</a>
+  <a href="/http.html">HTTP Database</a>
+  <a href="/tls.html">TLS Database</a>
+  <a href="/jarm.html">JARM Database</a>
+  <a href="/new_sig.html">Create New Signature</a>
+  <a href="/view_sigs.html">View / Edit Signatures</a>
+  <a href="/clear_db.html">Clear Databases</a>
+  <a href="/readme.html">Readme</a>
+</div>
+
+<body>
+
+  
+  <h1>C2 Results</h1>
+  <!-- 
+    Specify the table that will be used to display the people database
+  -->
+  <input type = "submit" name="retro" value="Click to reload detections (Retro Detect)" onclick="reload()">
+  <input type = "submit" name="huntio_certs" value="Click to load recent Hunt IO Cert Data" onclick="hunt_io_cert()">
+
+  <script>
+
+  load();
+
+    function load(){
+      
+      fetch("/C2List",{method: "GET"})
+        .then(response => response.json()) // Read the JSON body of the response
+          .then(c2List => {
+            c2List.forEach(c2 => {
+              
+              var elementToRemove = document.getElementById(c2.Malware_Family);
+              if (elementToRemove){
+                elementToRemove.remove()
+              }
+              
+
+              var customButton = document.createElement('a');
+              customButton.id = c2.Malware_Family
+              customButton.href = '/c2.html?malware_family='+c2.Malware_Family; // Replace '#' with the actual URL
+              customButton.className = 'customButton';
+              customButton.innerHTML = c2.Malware_Family + " (" + c2.Count + ")";
+
+  // Append the link to the body or any other desired element
+  document.body.appendChild(customButton);
+
+            })
+        })
+    }
+    
+    function reload(){
+      fetch("/Retro",{method: "GET"})
+        .then(response => response.text())
+          .then(success=> {
+            if (success == "Successful"){
+              load();
+              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
+              popupWindow.document.write("Detections Reloaded");
+            }        
+        })
+      }
+
+    function hunt_io_cert(){
+      fetch("/HuntIOCert",{method: "GET"})
+        .then(response => response.text())
+          .then(success=> {
+            if (success == "Successful"){
+              load();
+              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
+              popupWindow.document.write("Hunt IO Certs loaded");
+            }        
+        })
+      }
+      
+  </script>
+</body>
+
+</html>

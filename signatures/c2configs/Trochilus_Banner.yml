@@ -1,0 +1,48 @@
+rule_name: Trochilus_Banner
+guid: 633a2dec-14a5-4a47-be96-f3c2279ea728
+family: Trochilus
+version: ""
+description: "Sends a custom Trochilus probe and uses a C2 module to decrypt valid Trochilus traffic"
+classification: RAT
+references:
+- "C2Links Research"
+created: "2024-02-29 19:39:47"
+targets:
+- source: shodan
+  targetquery: []
+- source: censys
+  targetquery: []
+- source: badasn
+  targetquery:
+  - enabled
+- source: newdomain
+  targetquery: []
+- source: tdomain
+  targetquery: []
+- source: ipsum
+  targetquery:
+  - enabled
+scan_banner:
+  enabled: true
+  probefile: \xbf\xbf\xaf\xaf\x7e\x00\x00\x00\x56\x10\x46\x29\x2f\x6b\xde\x19\xa1\xdf\xcf\x86\x49\xb3\xdd\x94\x47\x0a\x4c\x89\x03\x92\xc4\x2e\x96\xf7\xb2\xb9\x1e\x35\xc2\xe5\xff\x7c\x72\x8f\xce\x32\xe9\x07\xeb\xe2\xb4\xa1\x03\x02\x0e\x64\xaf\x2b\x94\x1d\x61\x2c\x4f\x67\xcb\x0a\xc8\xb6\x5e\x1a\x4e\x97\x54\xac\xf0\x6e\x73\x9e\xfe\x6d\x08\xa9\xd0\x8f\x33\x05\x4b\x7f\xcc\x79\x4b\xec\x25\x4d\xee\xfa\x9d\xa3\x78\xef\x04\x2c\x29\x94\xcf\x91\xcb\x20\x9e\xce\x4f\x4c\xf1\x16\x9a\xf5\x93\xcb\x92\x6d\x37\x7c\xcf\x08\xa0\x9b\x18\xca\xcc\xc4\x8d\x83\x06\xc5
+scan_http:
+  enabled: false
+  method: ""
+  endpoint: ""
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: false
+  retryhttps: false
+  https: false
+  maxredirects: 0
+scan_tls:
+  enabled: false
+scan_jarm:
+  enabled: false
+detection:
+  module: true
+  module_name: trochilus_banner
+  simple: false
+  condition: all
+  queries: []

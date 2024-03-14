@@ -1,0 +1,43 @@
+rule_name: Supershell_Body_Hash
+guid: 22020014-8b3a-4ccb-8741-8bb0332eea5e
+family: Supershell
+version: ""
+description: |-
+  Supershell C2
+
+  GitHub README: "Supershell is a C2 remote control platform accessed through WEB services."
+classification: Admin / Panel
+references:
+- https://twitter.com/nahamike01/status/1643906047583879168
+created: "2023-12-11 15:23:55"
+targets:
+- source: shodan
+  targetquery:
+  - http.html_hash:-695508679
+- source: censys
+  targetquery:
+  - services.http.response.body_hash="sha1:c023c2f42e6fa22f6b0f5284f2c24d8abcef6191"
+scan_banner:
+  enabled: false
+  probefile: ""
+scan_http:
+  enabled: true
+  method: POST
+  endpoint: /
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: true
+  retryhttps: false
+  https: false
+  maxredirects: 0
+scan_tls:
+  enabled: false
+scan_jarm:
+  enabled: false
+detection:
+  module: false
+  module_name: ""
+  simple: false
+  condition: all
+  queries: []

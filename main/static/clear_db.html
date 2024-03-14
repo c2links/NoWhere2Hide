@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="styles.css">
+
+  <div class="banner">
+    <div>
+      <h1></h1>
+    </div>  
+  </div>
+
+  <title>NoWhere2Hide</title>
+  
+</head>
+
+<div class="topnav" id="myTopnav">
+  <a href="/">C2s</a>
+  <a href="/runscan.html">Run Scan</a>
+  <a href="/banner.html">Banner Database</a>
+  <a href="/http.html">HTTP Database</a>
+  <a href="/tls.html">TLS Database</a>
+  <a href="/jarm.html">JARM Database</a>
+  <a href="/new_sig.html">Create New Signature</a>
+  <a href="/view_sigs.html">View / Edit Signatures</a>
+  <a href="/clear_db.html" class="active">Clear Databases</a>
+  <a href="/readme.html">Readme</a>
+</div>
+
+<body>
+
+  
+  <h1>Clear DB</h1>
+  <!-- 
+    Specify the table that will be used to display the people database
+  -->
+  <input type = "submit" name="c2" value="Click to clear C2 database" onclick="clearC2()">
+  <input type = "submit" name="http" value="Click to clear HTTP database" onclick="clearHTTP()">
+  <input type = "submit" name="banner" value="Click to clear Banner database" onclick="clearBanner()">
+  <input type = "submit" name="tls" value="Click to clear TLS database" onclick="clearTLS()">
+  <input type = "submit" name="jarm" value="Click to clear JARM database" onclick="clearJARM()">
+  <input type = "submit" name="status" value="Click to clear Status database" onclick="clearStatus()">
+
+  <script>
+    function clearC2(){
+      fetch("/ClearDB",{method: "POST",body: new URLSearchParams({'table':'c2_results'})})
+        .then(response => response.text())
+          .then(success=> {
+            if (success == "Successful"){
+              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
+              popupWindow.document.write("C2 Database Cleared");
+            }        
+        })
+      }
+
+      function clearHTTP(){
+      fetch("/ClearDB",{method: "POST",body: new URLSearchParams({'table':'http'})})
+        .then(response => response.text())
+          .then(success=> {
+            if (success == "Successful"){
+              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
+              popupWindow.document.write("HTTP Database Cleared");
+            }        
+        })
+      }
+
+      function clearBanner(){
+      fetch("/ClearDB",{method: "POST",body: new URLSearchParams({'table':'banner'})})
+        .then(response => response.text())
+          .then(success=> {
+            if (success == "Successful"){
+              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
+              popupWindow.document.write("Banner Database Cleared");
+            }        
+        })
+      }
+
+      function clearTLS(){
+      fetch("/ClearDB",{method: "POST",body: new URLSearchParams({'table':'tls'})})
+        .then(response => response.text())
+          .then(success=> {
+            if (success == "Successful"){
+              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
+              popupWindow.document.write("TLS Database Cleared");
+            }        
+        })
+      }
+
+      function clearJARM(){
+      fetch("/ClearDB",{method: "POST",body: new URLSearchParams({'table':'jarm'})})
+        .then(response => response.text())
+          .then(success=> {
+            if (success == "Successful"){
+              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
+              popupWindow.document.write("JARM Database Cleared");
+            }        
+        })
+      }
+
+      function clearStatus(){
+      fetch("/ClearDB",{method: "POST",body: new URLSearchParams({'table':'status'})})
+        .then(response => response.text())
+          .then(success=> {
+            if (success == "Successful"){
+              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
+              popupWindow.document.write("Status Database Cleared");
+            }        
+        })
+      }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="styles.css">
+
+  <div class="banner">
+    <div>
+      <h1></h1>
+    </div>  
+  </div>
+
+  <title>NoWhere2Hide</title>
+    
+</head>
+
+<div class="topnav" id="myTopnav">
+  <a href="/" >C2s</a>
+  <a href="/runscan.html">Run Scan</a>
+  <a href="/banner.html">Banner Database</a>
+  <a href="/http.html">HTTP Database</a>
+  <a href="/tls.html">TLS Database</a>
+  <a href="/jarm.html">JARM Database</a>
+  <a href="/new_sig.html">Create New Signature</a>
+  <a href="/view_sigs.html" class="active">View / Edit Signatures</a>
+  <a href="/clear_db.html">Clear Databases</a>
+  <a href="/readme.html">Readme</a>
+</div>
+
+<body>
+  
+  <h1>Run a Scan</h1>
+  <h2> Select the Signature to Edit</h2><br>
+  <div class="three">
+    <script>
+      
+      var form = document.createElement("form");
+      form.setAttribute("method", "get");
+      form.setAttribute("action", "edit_sig.html");
+      
+
+      fetch("/Sigs")
+      .then(response => response.json()) // Read the JSON body of the response
+          .then(c2List => {
+              c2List.forEach(c2 => {
+                  var jobs = document.createElement("input");
+                  jobs.setAttribute("type", "radio");
+                  jobs.setAttribute("name", "signatures");
+                  jobs.setAttribute("id", c2);
+                  form.appendChild(jobs); 
+
+                  var job_label = document.createElement("label");
+                  job_label.setAttribute("for", c2);
+                  job_label.innerHTML= c2 + "<br/>";
+                  job_label.classList.add("customLabel");
+                  form.appendChild(job_label); 
+
+                  
+                  var br = document.createElement("br");
+                  form.appendChild(br);
+  
+              })
+              
+              var br = document.createElement("br");
+              form.appendChild(br);
+  
+              var br = document.createElement("br");
+              form.appendChild(br);
+  
+              var button = document.createElement("button");
+              button.textContent = "Edit selected signature"; 
+              button.id = "signature";
+
+              button.onclick = function() {
+
+
+                var add = document.createElement("input");
+                add.type = "text"; // Set the input type
+                add.name = "sig"; // Set the ID
+
+                var selectedOption = document.querySelector('input[name="signatures"]:checked');
+                add.value = selectedOption.id;
+                form.appendChild(add);
+        
+                form.submit();
+              }
+
+              form.append(button)
+                  
+           })
+          document.getElementsByTagName("body")[0]
+          .appendChild(form);
+  
+    </script>
+    </div>
+</body>
+
+</html>
