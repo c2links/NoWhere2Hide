@@ -23,7 +23,7 @@ Follow instructions -> https://go.dev/doc/install
 
 ## Clone Project
 
-git clone https://github.com/c2links/NoWhere2Hide.git
+```git clone https://github.com/c2links/NoWhere2Hide.git```
 
 ## Install and Setup Postgres
 
@@ -31,6 +31,7 @@ git clone https://github.com/c2links/NoWhere2Hide.git
 sudo apt update
 sudo apt install postgresql postgresql-contrib
 
+sudo -u postgres createuser --interactive
 <nowhere2hide>
 y
 
