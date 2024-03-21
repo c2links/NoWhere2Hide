@@ -11,11 +11,14 @@ My ultimate aim is to facilitate the effortless creation of detection signatures
 
 That being said, I've also tailored this tool for individuals like myself who conduct or aspire to conduct their own scanning activities, without necessarily having the means or inclination to share their signatures publicly.
 
-C2links4life
-
 # Installation Overview
 
 Tested and validated on Ubunutu 22.04, but should work wherever GO and Postgres can be installed.
+
+I have created two videos to go over the installation process.
+
+- Install GO: https://www.youtube.com/watch?v=DKvg6YVCwiU
+- Install NoWhere2Hide: https://www.youtube.com/watch?v=DKvg6YVCwiU
 
 ## Install GO
 
