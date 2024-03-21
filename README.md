@@ -18,7 +18,7 @@ Tested and validated on Ubunutu 22.04, but should work wherever GO and Postgres 
 I have created two videos to go over the installation process.
 
 - Install GO: https://www.youtube.com/watch?v=DKvg6YVCwiU
-- Install NoWhere2Hide: https://www.youtube.com/watch?v=DKvg6YVCwiU
+- Install NoWhere2Hide: https://www.youtube.com/watch?v=CF4MWWnOs-w
 
 ## Install GO
 
