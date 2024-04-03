@@ -1,26 +1,26 @@
 rule_name: Warzone_Default_Banner
-guid: 94463ba7-0605-4b3f-a79f-bcf5a6032197
+guid: f77f76d1-cafc-481b-bd63-d3fbd1c1d53c
 family: Warzone
 version: ""
 description: Checks default banner of Warzone
 classification: Select an option
 references:
 - C2Links Research
-created: "2024-02-16 22:14:59"
+created: "2024-04-03 12:27:44"
 targets:
 - source: shodan
   targetquery: []
 - source: censys
   targetquery: []
 - source: badasn
-  targetquery: []
+  targetquery:
+  - enabled
 - source: newdomain
   targetquery: []
 - source: tdomain
   targetquery: []
 - source: ipsum
-  targetquery:
-  - enabled
+  targetquery: []
 scan_banner:
   enabled: true
   probefile: ""

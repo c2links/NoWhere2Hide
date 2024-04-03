@@ -22,6 +22,10 @@ type Store interface {
 	GetRecordCountQ(table string, query string) (int, error)
 	GetC2List() ([]*C2_Count, error)
 	deleteContents(string) error
+	CheckTokenExists(inputToken string) (error, bool)
+	CheckAdminExists() bool
+	AddAdminToken(token string) error
+	GetAdminToken() (error, string)
 }
 
 // `dbStore` struct implements the `Store` interface. Variable `db` takes the pointer
@@ -34,6 +38,98 @@ type dbStore struct {
 // Create a global `store` variable of type `Store` interface. It will be initialized
 // in `func main()`.
 var store Store
+
+func (store *dbStore) AddAdminToken(token string) error {
+
+	insertDynStmt := "insert into token (token, username)" +
+		`values($1, $2)`
+
+	result, err := store.db.Exec(insertDynStmt, token, "admin")
+
+	if err != nil {
+		return err
+	}
+	log.Info(fmt.Sprintf("DB|Info|%s", result))
+
+	return nil
+
+}
+
+func (store *dbStore) GetAdminToken() (error, string) {
+
+	rows, err := store.db.Query("SELECT token,username FROM token")
+	if err != nil {
+		return err, ""
+	}
+
+	for rows.Next() {
+		var token string
+		var user string
+
+		err = rows.Scan(&token, &user)
+		if err != nil {
+			return err, ""
+		}
+
+		if user == "admin" {
+			return nil, token
+
+		}
+	}
+	return err, ""
+}
+
+func (store *dbStore) CheckAdminExists() bool {
+
+	rows, err := store.db.Query("SELECT token,username FROM token")
+	if err != nil {
+		return false
+	}
+
+	for rows.Next() {
+		var token string
+		var user string
+
+		err = rows.Scan(&token, &user)
+		if err != nil {
+			return false
+		}
+
+		if user == "admin" {
+			return true
+
+		}
+	}
+
+	return false
+
+}
+
+func (store *dbStore) CheckTokenExists(inputToken string) (error, bool) {
+
+	rows, err := store.db.Query("SELECT token,username FROM token")
+	if err != nil {
+		return err, false
+	}
+
+	for rows.Next() {
+		var token string
+		var user string
+
+		err = rows.Scan(&token, &user)
+		if err != nil {
+			return err, false
+		}
+
+		if inputToken == token {
+			return nil, true
+
+		}
+	}
+
+	return nil, false
+
+}
 
 func (store *dbStore) GetC2() ([]*C2_Record, error) {
 

@@ -1,12 +1,12 @@
 rule_name: Covenant_C2_Default_CERT
-guid: aae5d007-3ce2-41a9-a4af-0529d247dc32
+guid: 35e7571c-a125-44c7-bd7e-87333411dc82
 family: Covenant C2
 version: ""
 description: Detects default cert for Covenant C2 Framework
 classification: OST
 references:
 - https://github.com/BushidoUK/OSINT-SearchOperators/blob/main/ShodanAdversaryInfa.md
-created: "2023-11-27 19:57:40"
+created: "2024-04-02 14:22:22"
 targets:
 - source: shodan
   targetquery:
@@ -15,6 +15,16 @@ targets:
 - source: censys
   targetquery:
   - services.tls.certificates.leaf_data.subject_dn="CN=Covenant"
+- source: badasn
+  targetquery:
+  - enabled
+- source: newdomain
+  targetquery: []
+- source: tdomain
+  targetquery: []
+- source: ipsum
+  targetquery:
+  - enabled
 scan_banner:
   enabled: false
   probefile: ""

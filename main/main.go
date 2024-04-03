@@ -36,6 +36,36 @@ func init() {
 
 }
 
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		err := r.ParseForm()
+
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Info(fmt.Sprintf("UI Error -> %s", err))
+		}
+
+		for element, value := range r.Form {
+			if element == "c2-auth" {
+				if value[0] == "" {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
+				_, exists := store.CheckTokenExists(value[0])
+				if exists {
+					next.ServeHTTP(w, r)
+				} else {
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+
+				}
+			}
+		}
+
+	})
+}
+
 func newRouter() *mux.Router {
 
 	r := mux.NewRouter()
@@ -223,9 +253,11 @@ func newRouter() *mux.Router {
 
 	*/
 
+	r.HandleFunc("/Auth", authHandler).Methods("POST")
+
 	r.HandleFunc("/C2List", getC2ListHandler).Methods("GET")
-	r.HandleFunc("/Retro", retroHandler).Methods("GET")
-	r.HandleFunc("/HuntIOCert", huntIOCertsHandler).Methods("GET")
+	r.Handle("/Retro", authMiddleware(http.HandlerFunc(retroHandler))).Methods("POST")
+	r.Handle("/HuntIOCert", authMiddleware(http.HandlerFunc(huntIOCertsHandler))).Methods("POST")
 
 	r.HandleFunc("/RecordCount", getRecordCountHandler).Methods("POST")
 	r.HandleFunc("/RecordCountQ", getRecordCountQHandler).Methods("POST")
@@ -247,13 +279,13 @@ func newRouter() *mux.Router {
 
 	r.HandleFunc("/Sigs", getSigsHandler).Methods("GET")
 
-	r.HandleFunc("/RunScan", runScanHandler).Methods("POST")
+	r.Handle("/RunScan", authMiddleware(http.HandlerFunc(runScanHandler))).Methods("POST")
 	r.HandleFunc("/Jobs", getJobsHandler).Methods("GET")
 
-	r.HandleFunc("/AddSig", addSigHandler).Methods("POST")
+	r.Handle("/AddSig", authMiddleware(http.HandlerFunc(addSigHandler))).Methods("POST")
 	r.HandleFunc("/GetSig", getSigHandler).Methods("POST")
 
-	r.HandleFunc("/ClearDB", clearDBQueryHandler).Methods("POST")
+	r.Handle("/ClearDB", authMiddleware(http.HandlerFunc(clearDBQueryHandler))).Methods("POST")
 
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("static/"))))
 
@@ -318,6 +350,19 @@ func main() {
 	// declared globally in `store.go` file.
 
 	store = &dbStore{db: db}
+
+	if !store.CheckAdminExists() {
+
+		token := guid.New().String()
+		store.AddAdminToken(token)
+
+	}
+
+	err, token := store.GetAdminToken()
+	if err != nil {
+		fmt.Println("error getting token")
+	}
+	fmt.Printf("Admin Token for Authentication is: %s", token)
 
 	// Create router
 	r := newRouter()

@@ -665,7 +665,6 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := time.Now()
-
 	sig_config.Created = t.Format("2006-01-02 15:04:05")
 	sig_config.GUID = guid.New().String()
 
@@ -682,7 +681,7 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		log.Info(fmt.Sprintf("UI Error -> %s", err))
 	}
-	w.Write([]byte("Created Successfully"))
+	w.Write([]byte("Success"))
 	t = time.Now()
 	log.Info(fmt.Sprintf("UI -> Config %s created at %s", sig_config.Rule_Name, t.Format("2006-01-02 15:04:05")))
 }
@@ -736,6 +735,28 @@ func huntIOCertsHandler(w http.ResponseWriter, r *http.Request) {
 
 	s := RunHuntCerts()
 	w.Write([]byte(s))
+
+}
+
+func authHandler(w http.ResponseWriter, r *http.Request) {
+
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Info(fmt.Sprintf("UI Error -> %s", err))
+	}
+
+	for element, value := range r.Form {
+		if element == "c2-auth" {
+			_, exists := store.CheckTokenExists(value[0])
+			if exists {
+				w.Write([]byte("Success"))
+			} else {
+				w.Write([]byte("Try again"))
+
+			}
+		}
+	}
 
 }
 

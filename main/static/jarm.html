@@ -11,11 +11,11 @@
   <div class="banner">
     <div>
       <h1></h1>
-    </div>  
+    </div>
   </div>
 
   <title>NoWhere2Hide</title>
-  
+
 </head>
 
 <div class="topnav" id="myTopnav">
@@ -24,23 +24,122 @@
   <a href="/banner.html">Banner Database</a>
   <a href="/http.html">HTTP Database</a>
   <a href="/tls.html">TLS Database</a>
-  <a href="/jarm.html"class="active">JARM Database</a>
+  <a href="/jarm.html" class="active">JARM Database</a>
   <a href="/new_sig.html">Create New Signature</a>
   <a href="/view_sigs.html">View / Edit Signatures</a>
   <a href="/clear_db.html">Clear Databases</a>
   <a href="/readme.html">Readme</a>
 </div>
+<!-- Login Form -->
+<div id="loginForm" class="login-popup-form">
+  <h2>Enter Token</h2>
+  <form>
+    <div>
+      <label for="token">API Token:</label>
+      <input type="text" size=50 id="jwt_token" name="jwt_token" required>
+    </div>
+    <br>
+    <button onclick="auth()">Submit</button>
+  </form>
+  <button onclick="closePopup('auth')">Close</button>
+</div>
+
+<!-- Fail Form -->
+<div id="failForm" class="message-popup-form">
+  <h2>Invalid token</h2>
+  <button onclick="closePopup('fail')">Close</button>
+</div>
+
 <body>
+  <!-- 
+  Buttons to control the token authentication
+-->
+  <button type="button" id=logonButton class="logonButton" onclick="togglePopup('auth')">Click here to login!</button>
+  <button type="button" id=logoutButton class="logoutButton" onclick="logout()">Logged In (click to logout)</button>
+
+
+  <!--
+Script functions to facilitate authentication and setting the jwt in session storage
+-->
+
+  <script>
+    checkLogon()
+    // Function to toggle the visibility of the pop-up form
+
+    async function auth() {
+      event.preventDefault(); // Prevent default form submission
+      var jwt = document.getElementById('jwt_token').value;
+      try {
+        const response = await fetch("/Auth", { method: "POST", body: new URLSearchParams({ "c2-auth": jwt }) })
+        const data = await response.text()
+
+        if (data == "Success") {
+          closePopup('auth')
+          sessionStorage.setItem('jwtKey', jwt);
+          checkLogon()
+        }
+        else {
+          closePopup('auth')
+          togglePopup("fail")
+        }
+      }
+      catch (error) {
+        console.log(error)
+
+      }
+
+    }
+
+    function togglePopup(type) {
+      if (type == "auth") {
+        var popup = document.getElementById("loginForm");
+        popup.style.display = "block";
+      }
+      if (type == "fail") {
+        var popup = document.getElementById("failForm");
+        popup.style.display = "block";
+
+      }
+    }
+
+    function closePopup(type) {
+      if (type == "auth") {
+        document.getElementById("loginForm").style.display = "none";
+      }
+      if (type == "fail") {
+        document.getElementById("failForm").style.display = "none";
+      }
+    }
+
+    function checkLogon() {
+      const jwtKey = sessionStorage.getItem('jwtKey');
+      if (jwtKey) {
+        document.getElementById('logonButton').style.display = 'none';
+        document.getElementById('logoutButton').style.display = 'inline-block';
+      } else {
+        document.getElementById('logonButton').style.display = 'inline-block';
+        document.getElementById('logoutButton').style.display = 'none';
+
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem("jwtKey")
+      checkLogon()
+    }
+
+  </script>
 
   <h1>JARM Responses </h1>
   <!-- 
     Specify the table that will be used to display the people database
   -->
 
-  <label for="pg">Enter Postgres Query to Execute: </label> 
+  <label for="pg">Enter Postgres Query to Execute: </label>
   <input type="text" id="pg" placeholder="banner_text ilike '%found%'" size=60>
-  <input type = "submit" onclick="query()"><br><br>
-  <b>*** The prefix will always be 'select address,port, status,banner_text,banner_hex,length,timestamp from banners where '</b><br>
+  <input type="submit" onclick="query()"><br><br>
+  <b>*** The prefix will always be 'select address,port, status,banner_text,banner_hex,length,timestamp from banners
+    where '</b><br>
   <b>*** Enter just the where clause in the above box. For example, "banner_text ilike '%found%'"</b><br><br>
 
   <script>
@@ -50,14 +149,14 @@
     var current = 1;
     var totalcount;
 
-    async function recordCount(){
-      const response = await fetch("/RecordCount",{method: "POST",body: new URLSearchParams({'table':"jarm"})});
+    async function recordCount() {
+      const response = await fetch("/RecordCount", { method: "POST", body: new URLSearchParams({ 'table': "jarm" }) });
       const record = await response.text();
       return record;
     }
 
-    async function recordCountQ(){
-      const response = await fetch("/RecordCountQ",{method: "POST",body: new URLSearchParams({'table':"jarm",'query':pg.value})});
+    async function recordCountQ() {
+      const response = await fetch("/RecordCountQ", { method: "POST", body: new URLSearchParams({ 'table': "jarm", 'query': pg.value }) });
       const record = await response.text();
       return record;
     }
@@ -65,53 +164,55 @@
     function encodeHTMLEntities(text) {
       let textArea = document.createElement('textarea');
       textArea.innerText = text;
-      let encodedOutput=textArea.innerHTML;
-      let arr=encodedOutput.split('<br>');
-      encodedOutput=arr.join('\n');
+      let encodedOutput = textArea.innerHTML;
+      let arr = encodedOutput.split('<br>');
+      encodedOutput = arr.join('\n');
       return encodedOutput;
     }
 
   </script>
 
   <p id="recordP"></p>
-  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button onclick="nextPage()">Next</button>
+  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button
+    onclick="nextPage()">Next</button>
   <table class="PTABLE" style="width: 100%;">
-      <th style="width:15%">address</th>
-      <th style="width:5%">port</th>
-      <th style="width:15%">status</th>
-      <th style="width:30%">fingerprint</th>
+    <th style="width:15%">address</th>
+    <th style="width:5%">port</th>
+    <th style="width:15%">status</th>
+    <th style="width:30%">fingerprint</th>
     </tr>
   </table>
-  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button onclick="nextPage()">Next</button>
-  <br/>
-  
+  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button
+    onclick="nextPage()">Next</button>
+  <br />
+
   <script>
 
     control()
 
     function nextPage() {
-      
+
       if (current < totalPages) {
         current++;
         offset = offset + limit;
         document.getElementById("currentDyn").innerText = current;
         control();
-        }
-        else{control();}
       }
+      else { control(); }
+    }
 
     function prevPage() {
-      
+
       if (current > 1) {
         current--;
         offset = offset - limit;
         document.getElementById("currentDyn").innerText = current;
         control();
-        }
-        else{control();}
+      }
+      else { control(); }
     }
 
-    function query(){
+    function query() {
 
       offset = 0;
       current = 1;
@@ -119,104 +220,98 @@
       control()
     }
 
-    function control()
-    {
+    function control() {
       var pg_query = document.getElementById("pg");
       document.getElementById("currentDyn").innerText = current;
 
-      if (pg_query.value == ""){
-        recordCount().then(function (result){
+      if (pg_query.value == "") {
+        recordCount().then(function (result) {
           totalcount = result
           document.getElementById("recordP").innerText = "Total Results: " + totalcount;
-          totalPages = Math.ceil(totalcount/ limit);
+          totalPages = Math.ceil(totalcount / limit);
           var d = document.getElementById("totalDyn");
           d.innerText = totalPages;
         })
-        
+
         jarm();
       }
-        else{
-          recordCountQ().then(function (resultQ){
-            totalcount = resultQ;
-            document.getElementById("recordP").innerText = "Total Results: " + totalcount;
-            totalPages = Math.ceil(totalcount/ limit);
-            document.getElementById("totalDyn").innerText = totalPages;
-          })
-          jarmQuery();}
-    
-    }
-
-    function jarm()
-    { 
-      jarmTable = document.querySelector("table")
-      for(var i = 1;i<jarmTable.rows.length;){jarmTable.deleteRow(i);}
-            
-      fetch("/Jarm",{method: "POST",body: new URLSearchParams({'limit':limit,"offset":offset})})
-        .then(response => response.json()) // Read the JSON body of the response
-          .then(jarmList => {
-            jarmList.forEach(jarm => {
-
-              // Create the table row
-              row = document.createElement("tr") 
-              
-              // Create the table data elements and extract corresponding values from received `person`
-              address = document.createElement("td") 
-              address.innerHTML = jarm.Address
-              port = document.createElement("td")
-              port.innerHTML = jarm.Port
-              conn_status = document.createElement("td")
-              conn_status.innerHTML = jarm.Status
-              fingerprint = document.createElement("td") 
-              fingerprint.innerHTML = jarm.Fingerprint
-              
-              // Add the data elements to the row
-              row.appendChild(address)
-              row.appendChild(port)
-              row.appendChild(conn_status)
-              row.appendChild(fingerprint)
-              
-              // Add the row element to the table
-              jarmTable.appendChild(row)
-          })
+      else {
+        recordCountQ().then(function (resultQ) {
+          totalcount = resultQ;
+          document.getElementById("recordP").innerText = "Total Results: " + totalcount;
+          totalPages = Math.ceil(totalcount / limit);
+          document.getElementById("totalDyn").innerText = totalPages;
         })
+        jarmQuery();
+      }
+
     }
 
-    function jarmQuery()
-    {
+    async function jarm() {
       jarmTable = document.querySelector("table")
-      
-      for(var i = 1;i<jarmTable.rows.length;){jarmTable.deleteRow(i);}
+      for (var i = 1; i < jarmTable.rows.length;) { jarmTable.deleteRow(i); }
 
-      fetch("/Jarmquery",{method: "POST",body: new URLSearchParams({'pg':pg.value,'limit':limit,"offset":offset})})
-        .then(response => response.json()) // Read the JSON body of the response
-          .then(jarmList => {
-            jarmList.forEach(jarm => {
+      const response = await fetch("/Jarm", { method: "POST", body: new URLSearchParams({ 'limit': limit, "offset": offset }) })
+      const data = await response.json() // Read the JSON body of the response
+      data.forEach(jarm => {
 
-              // Create the table row
-              row = document.createElement("tr") 
-              
-              // Create the table data elements and extract corresponding values from received `person`
-              address = document.createElement("td") 
-              address.innerHTML = jarm.Address
-              port = document.createElement("td")
-              port.innerHTML = jarm.Port
-              conn_status = document.createElement("td")
-              conn_status.innerHTML = jarm.Status
-              fingerprint = document.createElement("td") 
-              fingerprint.innerHTML = jarm.Fingerprint
-              
-              // Add the data elements to the row
-              row.appendChild(address)
-              row.appendChild(port)
-              row.appendChild(conn_status)
-              row.appendChild(fingerprint)
-              
-              // Add the row element to the table
-              jarmTable.appendChild(row)
-          })
-        })
+        // Create the table row
+        row = document.createElement("tr")
+
+        // Create the table data elements and extract corresponding values from received `person`
+        address = document.createElement("td")
+        address.innerHTML = jarm.Address
+        port = document.createElement("td")
+        port.innerHTML = jarm.Port
+        conn_status = document.createElement("td")
+        conn_status.innerHTML = jarm.Status
+        fingerprint = document.createElement("td")
+        fingerprint.innerHTML = jarm.Fingerprint
+
+        // Add the data elements to the row
+        row.appendChild(address)
+        row.appendChild(port)
+        row.appendChild(conn_status)
+        row.appendChild(fingerprint)
+
+        // Add the row element to the table
+        jarmTable.appendChild(row)
+      })
     }
-  
+
+    async function jarmQuery() {
+      jarmTable = document.querySelector("table")
+
+      for (var i = 1; i < jarmTable.rows.length;) { jarmTable.deleteRow(i); }
+
+      const response = await fetch("/Jarmquery", { method: "POST", body: new URLSearchParams({ 'pg': pg.value, 'limit': limit, "offset": offset }) })
+      const data = await response.json() // Read the JSON body of the response
+      data.forEach(jarm => {
+
+        // Create the table row
+        row = document.createElement("tr")
+
+        // Create the table data elements and extract corresponding values from received `person`
+        address = document.createElement("td")
+        address.innerHTML = jarm.Address
+        port = document.createElement("td")
+        port.innerHTML = jarm.Port
+        conn_status = document.createElement("td")
+        conn_status.innerHTML = jarm.Status
+        fingerprint = document.createElement("td")
+        fingerprint.innerHTML = jarm.Fingerprint
+
+        // Add the data elements to the row
+        row.appendChild(address)
+        row.appendChild(port)
+        row.appendChild(conn_status)
+        row.appendChild(fingerprint)
+
+        // Add the row element to the table
+        jarmTable.appendChild(row)
+      })
+    }
+
   </script>
 
 </body>

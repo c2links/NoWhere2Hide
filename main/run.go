@@ -59,7 +59,7 @@ func Run(configPaths []string) string {
 	err = db.AddStatus(&js)
 	if err != nil {
 		log.Info(fmt.Sprintf("Run|%s|Error|Error updating Status %s", runGUID, err))
-		return err.Error()
+		//return err.Error()
 	}
 
 	var configs []*nowhere2hide.C2_Config
@@ -89,13 +89,13 @@ func Run(configPaths []string) string {
 
 				yamlFile, err := os.ReadFile(fmt.Sprintf("%s/%s", runArgs.Signatures, d.Name()))
 				if err != nil {
-					log.Info(fmt.Sprintf("Run|%s|Error|Error reading YAML File", runGUID))
+					log.Info(fmt.Sprintf("Run|%s|Error|Error reading YAML File|%s", runGUID, err))
 
 				}
 
 				err = yaml.Unmarshal(yamlFile, &config)
 				if err != nil {
-					log.Info(fmt.Sprintf("Run|%s|Error|Error parsing YAML File", runGUID))
+					log.Info(fmt.Sprintf("Run|%s|Error|Error parsing YAML File|%s", runGUID, err))
 				}
 
 				configs = append(configs, &config)
@@ -103,7 +103,7 @@ func Run(configPaths []string) string {
 			return nil
 		})
 		if fileError != nil {
-			log.Info(fmt.Sprintf("Run|%s|Error|Error parsing YAML File", runGUID))
+			log.Info(fmt.Sprintf("Run|%s|Error|Error parsing YAML File|%s", runGUID, err))
 		}
 
 	} else {
@@ -111,26 +111,31 @@ func Run(configPaths []string) string {
 		config_string := ""
 
 		for _, configPath := range configPaths {
-			config_string = config_string + configPath + "\n"
-			var config nowhere2hide.C2_Config
+			if configPath != "c2-auth" {
 
-			yamlFile, err := os.ReadFile(fmt.Sprintf("%s/%s", runArgs.Signatures, configPath))
-			if err != nil {
-				log.Info(fmt.Sprintf("Run|%s|Error|Error reading YAML File", runGUID))
-				return err.Error()
+				config_string = config_string + configPath + "\n"
+				var config nowhere2hide.C2_Config
+
+				yamlFile, err := os.ReadFile(fmt.Sprintf("%s/%s", runArgs.Signatures, configPath))
+				if err != nil {
+					log.Info(fmt.Sprintf("Run|%s|Error|Error reading YAML File|%s", runGUID, err))
+					return err.Error()
+
+				}
+
+				err = yaml.Unmarshal(yamlFile, &config)
+				if err != nil {
+					log.Info(fmt.Sprintf("Run|%s|Error|Error parsing YAML File|%s", runGUID, err))
+					return err.Error()
+				}
+
+				configs = append(configs, &config)
 
 			}
-
-			err = yaml.Unmarshal(yamlFile, &config)
-			if err != nil {
-				log.Info(fmt.Sprintf("Run|%s|Error|Error parsing YAML File", runGUID))
-				return err.Error()
-			}
-
-			configs = append(configs, &config)
-
 		}
-		js.Configs = config_string
+		if len(config_string) > 255 {
+			js.Configs = config_string[0:255]
+		}
 		err = db.UpdateStatus(&js)
 		if err != nil {
 			log.Info(fmt.Sprintf("Run|%s|Error|Error updating Status %s", runGUID, err))
@@ -299,13 +304,13 @@ func RunRetro() string {
 
 			yamlFile, err := os.ReadFile(fmt.Sprintf("%s/%s", runArgs.Signatures, d.Name()))
 			if err != nil {
-				log.Info(fmt.Sprintf("RunRetro|%s|Error|Error reading YAML File", runGUID))
+				log.Info(fmt.Sprintf("RunRetro|%s|Error|Error reading YAML File|%s", runGUID, err))
 
 			}
 
 			err = yaml.Unmarshal(yamlFile, &config)
 			if err != nil {
-				log.Info(fmt.Sprintf("RunRetro|%s|Error|Error parsing YAML File", runGUID))
+				log.Info(fmt.Sprintf("RunRetro|%s|Error|Error parsing YAML File|%s", runGUID, err))
 			}
 
 			configs = append(configs, &config)
@@ -314,7 +319,7 @@ func RunRetro() string {
 	})
 
 	if fileError != nil {
-		log.Info(fmt.Sprintf("RunRetro|%s|Error|Error parsing YAML File", runGUID))
+		log.Info(fmt.Sprintf("RunRetro|%s|Error|Error parsing YAML File|%s", runGUID, err))
 	}
 
 	js.Config_Validated = true

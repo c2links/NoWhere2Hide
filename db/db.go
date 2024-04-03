@@ -42,37 +42,90 @@ func InitDB() bool {
 		log.Info(fmt.Sprintf("DB|Error|%s", c2_err))
 		return false
 	}
+	log.Info(fmt.Sprintf("DB|Info|Created C2 Database or already exist"))
 
 	banner_err := create_banner()
 	if banner_err != nil {
 		log.Info(fmt.Sprintf("DB|Error|%s", banner_err))
 		return false
 	}
+	log.Info(fmt.Sprintf("DB|Info|Created Banner Database or already exist"))
 
 	status_err := create_status()
 	if status_err != nil {
 		log.Info(fmt.Sprintf("DB|Error|%s", status_err))
 		return false
 	}
+	log.Info(fmt.Sprintf("DB|Info|Created Status Database or already exist"))
 
 	tls_err := create_tls()
 	if tls_err != nil {
 		log.Info(fmt.Sprintf("DB|Error|%s", status_err))
 		return false
 	}
+	log.Info(fmt.Sprintf("DB|Info|Created TLS Database or already exist"))
 
 	jarm_err := create_jarm()
 	if jarm_err != nil {
 		log.Info(fmt.Sprintf("DB|Error|%s", status_err))
 		return false
 	}
+	log.Info(fmt.Sprintf("DB|Info|Created JARM Database or already exist"))
 
 	http_err := create_http()
 	if http_err != nil {
 		log.Info(fmt.Sprintf("DB|Error|%s", status_err))
 		return false
 	}
+	log.Info(fmt.Sprintf("DB|Info|Created HTTP Database or already exist"))
+
+	token_err := create_token()
+	if token_err != nil {
+		log.Info(fmt.Sprintf("DB|Error|%s", status_err))
+		return false
+	}
+	log.Info(fmt.Sprintf("DB|Info|Created Token Database or already exist"))
+
 	return true
+}
+
+func create_token() error {
+
+	// connection string
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+
+	// open database
+	db, err := sql.Open("postgres", psqlconn)
+	if err != nil {
+		return err
+	}
+
+	// close database
+	defer db.Close()
+
+	// check db
+	err = db.Ping()
+
+	if err != nil {
+		return err
+	}
+
+	var token = "CREATE TABLE IF NOT EXISTS token " +
+		"(id SERIAL PRIMARY KEY, " +
+		"token VARCHAR(255) NOT NULL, " +
+		"username VARCHAR(255) NOT NULL);"
+
+	result, err := db.Exec(token)
+	if err != nil {
+		return err
+	}
+
+	log.Info(fmt.Sprintf("DB|Info|%s", result))
+
+	defer db.Close()
+
+	return nil
+
 }
 
 func create_status() error {

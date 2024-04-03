@@ -12,6 +12,7 @@ import (
 	gohttp "net/http"
 	"nowhere2hide"
 	"nowhere2hide/db"
+	"nowhere2hide/utils"
 	"os"
 	"strings"
 	"sync"
@@ -448,7 +449,11 @@ func zgrab2_add_scan_data(outputQueue chan nowhere2hide.GeneralResponse, runGUID
 
 func hunt_extract_certs(runGUID string) {
 
-	downloadURL := "https://api.hunt.io/v1/feeds/certificates?token="
+	api_keys, err := utils.LoadAPI()
+	if err != nil {
+		log.Info(fmt.Sprintf("Collect|%s|HUNT|Error|%s", runGUID, err))
+	}
+	downloadURL := fmt.Sprintf("https://api.hunt.io/v1/feeds/certificates?token=%s", api_keys.HUNTIO)
 
 	// Use http.Get to download the file
 	log.Info(fmt.Sprintf("Scan|%s|hunt_cert|Info|Downloading", runGUID))

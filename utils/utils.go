@@ -23,6 +23,7 @@ type API_KEYS struct {
 	CENSYS_API_ID string
 	CENSYS_SECRET string
 	SHODAN        string
+	HUNTIO        string
 }
 
 /*

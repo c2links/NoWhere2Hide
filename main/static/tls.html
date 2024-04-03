@@ -10,18 +10,18 @@
   <div class="banner">
     <div>
       <h1></h1>
-    </div>  
+    </div>
   </div>
 
   <title>NoWhere2Hide</title>
-  
+
   <style>
-    
+
   </style>
 </head>
 
 <div class="topnav" id="myTopnav">
-  <a href="/" >C2s</a>
+  <a href="/">C2s</a>
   <a href="/runscan.html">Run Scan</a>
   <a href="/banner.html">Banner Database</a>
   <a href="/http.html">HTTP Database</a>
@@ -32,18 +32,118 @@
   <a href="/clear_db.html">Clear Databases</a>
   <a href="/readme.html">Readme</a>
 </div>
+
+<!-- Login Form -->
+<div id="loginForm" class="login-popup-form">
+  <h2>Enter Token</h2>
+  <form>
+    <div>
+      <label for="token">API Token:</label>
+      <input type="text" size=50 id="jwt_token" name="jwt_token" required>
+    </div>
+    <br>
+    <button onclick="auth()">Submit</button>
+  </form>
+  <button onclick="closePopup('auth')">Close</button>
+</div>
+
+<!-- Fail Form -->
+<div id="failForm" class="message-popup-form">
+  <h2>Invalid token</h2>
+  <button onclick="closePopup('fail')">Close</button>
+</div>
+
 <body>
-  
+  <!-- 
+  Buttons to control the token authentication
+-->
+  <button type="button" id=logonButton class="logonButton" onclick="togglePopup('auth')">Click here to login!</button>
+  <button type="button" id=logoutButton class="logoutButton" onclick="logout()">Logged In (click to logout)</button>
+
+
+  <!--
+Script functions to facilitate authentication and setting the jwt in session storage
+-->
+
+  <script>
+    checkLogon()
+    // Function to toggle the visibility of the pop-up form
+
+    async function auth() {
+      event.preventDefault(); // Prevent default form submission
+      var jwt = document.getElementById('jwt_token').value;
+      try {
+        const response = await fetch("/Auth", { method: "POST", body: new URLSearchParams({ "c2-auth": jwt }) })
+        const data = await response.text()
+
+        if (data == "Success") {
+          closePopup('auth')
+          sessionStorage.setItem('jwtKey', jwt);
+          checkLogon()
+        }
+        else {
+          closePopup('auth')
+          togglePopup("fail")
+        }
+      }
+      catch (error) {
+        console.log(error)
+
+      }
+
+    }
+
+    function togglePopup(type) {
+      if (type == "auth") {
+        var popup = document.getElementById("loginForm");
+        popup.style.display = "block";
+      }
+      if (type == "fail") {
+        var popup = document.getElementById("failForm");
+        popup.style.display = "block";
+
+      }
+    }
+
+    function closePopup(type) {
+      if (type == "auth") {
+        document.getElementById("loginForm").style.display = "none";
+      }
+      if (type == "fail") {
+        document.getElementById("failForm").style.display = "none";
+      }
+    }
+
+    function checkLogon() {
+      const jwtKey = sessionStorage.getItem('jwtKey');
+      if (jwtKey) {
+        document.getElementById('logonButton').style.display = 'none';
+        document.getElementById('logoutButton').style.display = 'inline-block';
+      } else {
+        document.getElementById('logonButton').style.display = 'inline-block';
+        document.getElementById('logoutButton').style.display = 'none';
+
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem("jwtKey")
+      checkLogon()
+    }
+
+  </script>
+
   <h1>TLS Responses </h1>
   <!-- 
     Specify the table that will be used to display the people database
   -->
 
-  <label for="pg">Enter Postgres Query to Execute: </label> 
+  <label for="pg">Enter Postgres Query to Execute: </label>
   <input type="text" id="pg" placeholder="serial_number ilike '%found%" size=60>
-  <input type = "submit" onclick="query()"><br><br>
+  <input type="submit" onclick="query()"><br><br>
 
-  <b>*** The prefix will always be 'select address,port, status,banner_text,banner_hex,length,timestamp from tls where '</b><br>
+  <b>*** The prefix will always be 'select address,port, status,banner_text,banner_hex,length,timestamp from tls where
+    '</b><br>
   <b>*** Enter just the where clause in the above box. For example, "serial_number ilike '%found%'"</b><br><br>
 
   <script>
@@ -53,14 +153,14 @@
     var current = 1;
     var totalcount;
 
-    async function recordCount(){
-      const response = await fetch("/RecordCount",{method: "POST",body: new URLSearchParams({'table':"tls"})});
+    async function recordCount() {
+      const response = await fetch("/RecordCount", { method: "POST", body: new URLSearchParams({ 'table': "tls" }) });
       const record = await response.text();
       return record;
     }
 
-    async function recordCountQ(){
-      const response = await fetch("/RecordCountQ",{method: "POST",body: new URLSearchParams({'table':"tls",'query':pg.value})});
+    async function recordCountQ() {
+      const response = await fetch("/RecordCountQ", { method: "POST", body: new URLSearchParams({ 'table': "tls", 'query': pg.value }) });
       const record = await response.text();
       return record;
     }
@@ -68,57 +168,59 @@
   </script>
 
   <p id="recordP"></p>
-  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button onclick="nextPage()">Next</button>
+  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button
+    onclick="nextPage()">Next</button>
   <table class="PTABLE" style="width: 100%;">
-    
-      <th style="width:10%">address</th>
-      <th style="width:6%">port</th>
-      <th style="width:6%">status</th>
-      <th style="width:6%">version</th>
-      <th style="width:6%">serial_number</th>
-      <th style="width:6%">issuer_common_name</th>
-      <th style="width:6%">issuer_country</th>
-      <th style="width:6%">issuer_organization</th>
-      <th style="width:6%">issuer_dn</th>
-      <th style="width:6%">subject_common_name</th>
-      <th style="width:6%">subject_country</th>
-      <th style="width:6%">subject_organization</th>
-      <th style="width:6%">subject_dn</th>
-      <th style="width:6%">fingerprint_sha1</th>
-      <th style="width:6%">ja4x</th>
-      <th style="width:6%">timestamp</th>
+
+    <th style="width:10%">address</th>
+    <th style="width:6%">port</th>
+    <th style="width:6%">status</th>
+    <th style="width:6%">version</th>
+    <th style="width:6%">serial_number</th>
+    <th style="width:6%">issuer_common_name</th>
+    <th style="width:6%">issuer_country</th>
+    <th style="width:6%">issuer_organization</th>
+    <th style="width:6%">issuer_dn</th>
+    <th style="width:6%">subject_common_name</th>
+    <th style="width:6%">subject_country</th>
+    <th style="width:6%">subject_organization</th>
+    <th style="width:6%">subject_dn</th>
+    <th style="width:6%">fingerprint_sha1</th>
+    <th style="width:6%">ja4x</th>
+    <th style="width:6%">timestamp</th>
     </tr>
   </table>
-  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button onclick="nextPage()">Next</button>
-  <br/>
-  
+  <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button
+    onclick="nextPage()">Next</button>
+  <br />
+
   <script>
 
     control()
 
     function nextPage() {
-      
+
       if (current < totalPages) {
         current++;
         offset = offset + limit;
         document.getElementById("currentDyn").innerText = current;
         control();
-        }
-        else{control();}
       }
+      else { control(); }
+    }
 
     function prevPage() {
-      
+
       if (current > 1) {
         current--;
         offset = offset - limit;
         document.getElementById("currentDyn").innerText = current;
         control();
-        }
-        else{control();}
+      }
+      else { control(); }
     }
 
-    function query(){
+    function query() {
 
       offset = 0;
       current = 1;
@@ -126,165 +228,163 @@
       control()
     }
 
-    function control()
-    {
+    function control() {
       var pg_query = document.getElementById("pg");
       document.getElementById("currentDyn").innerText = current;
 
-      if (pg_query.value == ""){
-        recordCount().then(function (result){
+      if (pg_query.value == "") {
+        recordCount().then(function (result) {
           totalcount = result
           document.getElementById("recordP").innerText = "Total Results: " + totalcount;
-          totalPages = Math.ceil(totalcount/ limit);
+          totalPages = Math.ceil(totalcount / limit);
           var d = document.getElementById("totalDyn");
           d.innerText = totalPages;
         })
-        
+
         tls();
       }
-        else{
-          recordCountQ().then(function (resultQ){
-            totalcount = resultQ;
-            document.getElementById("recordP").innerText = "Total Results: " + totalcount;
-            totalPages = Math.ceil(totalcount/ limit);
-            document.getElementById("totalDyn").innerText = totalPages;
-          })
-          tlsQuery();}
-    
-    }
-    
-    function tls(){ 
-      tlsTable = document.querySelector("table")
-      
-      for(var i = 1;i<tlsTable.rows.length;){tlsTable.deleteRow(i);}
-
-      fetch("/TLS",{method: "POST",body: new URLSearchParams({'limit':limit,"offset":offset})})
-        .then(response => response.json()) // Read the JSON body of the response
-          .then(tlsList => {
-            tlsList.forEach(tls => {
-              // Create the table row
-              row = document.createElement("tr") 
-              // Create the table data elements and extract corresponding values from received `person`
-              address = document.createElement("td") 
-              address.innerHTML = tls.Address
-              port = document.createElement("td")
-              port.innerHTML = tls.Port
-              conn_status = document.createElement("td")
-              conn_status.innerHTML = tls.Status
-              version = document.createElement("td")
-              version.innerHTML = tls.Version
-              serial_number = document.createElement("td")
-              serial_number.innerHTML = tls.Serial_Number
-              issuer_common_name = document.createElement("td")
-              issuer_common_name.innerHTML = tls.Issuer_Common_Name
-              issuer_country= document.createElement("td")
-              issuer_country.innerHTML = tls.Issuer_Country
-              issuer_organization = document.createElement("td")
-              issuer_organization.innerHTML = tls.Issuer_Organization
-              issuer_dn = document.createElement("td")
-              issuer_dn.innerHTML = tls.Issuer_DN
-              subject_common_name = document.createElement("td")
-              subject_common_name.innerHTML = tls.Subject_Common_Name
-              subject_country = document.createElement("td")
-              subject_country.innerHTML = tls.Subject_Country
-              subject_organization = document.createElement("td")
-              subject_organization.innerHTML = tls.Subject_Organization
-              subject_dn = document.createElement("td")
-              subject_dn.innerHTML = tls.Subject_DN
-              fingerprint_sha1 = document.createElement("td")
-              fingerprint_sha1.innerHTML = tls.Fingerprint_SHA1
-              ja4x = document.createElement("td")
-              ja4x.innerHTML = tls.JA4X
-              timestamp = document.createElement("td")
-              timestamp.innerHTML = tls.Timestamp
-              // Add the data elements to the row
-              row.appendChild(address)
-              row.appendChild(port)
-              row.appendChild(conn_status)
-              row.appendChild(version)
-              row.appendChild(serial_number)
-              row.appendChild(issuer_common_name)
-              row.appendChild(issuer_country)
-              row.appendChild(issuer_organization)
-              row.appendChild(issuer_dn)
-              row.appendChild(subject_common_name)
-              row.appendChild(subject_country)
-              row.appendChild(subject_organization)
-              row.appendChild(subject_dn)
-              row.appendChild(fingerprint_sha1)
-              row.appendChild(ja4x)
-              row.appendChild(timestamp)
-              // Add the row element to the table
-              tlsTable.appendChild(row)
-            })
-          })
-    }
-    function tlsQuery(){
-
-      tlsTable = document.querySelector("table")
-      
-      for(var i = 1;i<tlsTable.rows.length;){tlsTable.deleteRow(i);}
-      
-      fetch("/TLSquery",{method: "POST",body: new URLSearchParams({'pg':pg.value,'limit':limit,"offset":offset})})
-        .then(response => response.json()) // Read the JSON body of the response
-          .then(tlsList => {
-            tlsList.forEach(tls => {
-              // Create the table row
-              row = document.createElement("tr") 
-              // Create the table data elements and extract corresponding values from received `person`
-              address = document.createElement("td") 
-              address.innerHTML = tls.Address
-              port = document.createElement("td")
-              port.innerHTML = tls.Port
-              conn_status = document.createElement("td")
-              conn_status.innerHTML = tls.Status
-              version = document.createElement("td")
-              version.innerHTML = tls.Version
-              serial_number = document.createElement("td")
-              serial_number.innerHTML = tls.Serial_Number
-              issuer_common_name = document.createElement("td")
-              issuer_common_name.innerHTML = tls.Issuer_Common_Name
-              issuer_country= document.createElement("td")
-              issuer_country.innerHTML = tls.Issuer_Country
-              issuer_organization = document.createElement("td")
-              issuer_organization.innerHTML = tls.Issuer_Organization
-              issuer_dn = document.createElement("td")
-              issuer_dn.innerHTML = tls.Issuer_DN
-              subject_common_name = document.createElement("td")
-              subject_common_name.innerHTML = tls.Subject_Common_Name
-              subject_country = document.createElement("td")
-              subject_country.innerHTML = tls.Subject_Country
-              subject_organization = document.createElement("td")
-              subject_organization.innerHTML = tls.Subject_Organization
-              subject_dn = document.createElement("td")
-              subject_dn.innerHTML = tls.Subject_DN
-              fingerprint_sha1 = document.createElement("td")
-              fingerprint_sha1.innerHTML = tls.Fingerprint_SHA1
-              ja4x = document.createElement("td")
-              ja4x.innerHTML = tls.JA4X
-              timestamp = document.createElement("td")
-              timestamp.innerHTML = tls.Timestamp
-              // Add the data elements to the row
-              row.appendChild(address)
-              row.appendChild(port)
-              row.appendChild(conn_status)
-              row.appendChild(version)
-              row.appendChild(serial_number)
-              row.appendChild(issuer_common_name)
-              row.appendChild(issuer_country)
-              row.appendChild(issuer_organization)
-              row.appendChild(issuer_dn)
-              row.appendChild(subject_common_name)
-              row.appendChild(subject_country)
-              row.appendChild(subject_organization)
-              row.appendChild(subject_dn)
-              row.appendChild(fingerprint_sha1)
-              row.appendChild(ja4x)
-              row.appendChild(timestamp)
-              // Add the row element to the table
-              tlsTable.appendChild(row)
+      else {
+        recordCountQ().then(function (resultQ) {
+          totalcount = resultQ;
+          document.getElementById("recordP").innerText = "Total Results: " + totalcount;
+          totalPages = Math.ceil(totalcount / limit);
+          document.getElementById("totalDyn").innerText = totalPages;
         })
+        tlsQuery();
+      }
+
+    }
+
+    async function tls() {
+      tlsTable = document.querySelector("table")
+
+      for (var i = 1; i < tlsTable.rows.length;) { tlsTable.deleteRow(i); }
+
+      const response = await fetch("/TLS", { method: "POST", body: new URLSearchParams({ 'limit': limit, "offset": offset }) })
+      const data = await response.json() // Read the JSON body of the response
+      data.forEach(tls => {
+        // Create the table row
+        row = document.createElement("tr")
+        // Create the table data elements and extract corresponding values from received `person`
+        address = document.createElement("td")
+        address.innerHTML = tls.Address
+        port = document.createElement("td")
+        port.innerHTML = tls.Port
+        conn_status = document.createElement("td")
+        conn_status.innerHTML = tls.Status
+        version = document.createElement("td")
+        version.innerHTML = tls.Version
+        serial_number = document.createElement("td")
+        serial_number.innerHTML = tls.Serial_Number
+        issuer_common_name = document.createElement("td")
+        issuer_common_name.innerHTML = tls.Issuer_Common_Name
+        issuer_country = document.createElement("td")
+        issuer_country.innerHTML = tls.Issuer_Country
+        issuer_organization = document.createElement("td")
+        issuer_organization.innerHTML = tls.Issuer_Organization
+        issuer_dn = document.createElement("td")
+        issuer_dn.innerHTML = tls.Issuer_DN
+        subject_common_name = document.createElement("td")
+        subject_common_name.innerHTML = tls.Subject_Common_Name
+        subject_country = document.createElement("td")
+        subject_country.innerHTML = tls.Subject_Country
+        subject_organization = document.createElement("td")
+        subject_organization.innerHTML = tls.Subject_Organization
+        subject_dn = document.createElement("td")
+        subject_dn.innerHTML = tls.Subject_DN
+        fingerprint_sha1 = document.createElement("td")
+        fingerprint_sha1.innerHTML = tls.Fingerprint_SHA1
+        ja4x = document.createElement("td")
+        ja4x.innerHTML = tls.JA4X
+        timestamp = document.createElement("td")
+        timestamp.innerHTML = tls.Timestamp
+        // Add the data elements to the row
+        row.appendChild(address)
+        row.appendChild(port)
+        row.appendChild(conn_status)
+        row.appendChild(version)
+        row.appendChild(serial_number)
+        row.appendChild(issuer_common_name)
+        row.appendChild(issuer_country)
+        row.appendChild(issuer_organization)
+        row.appendChild(issuer_dn)
+        row.appendChild(subject_common_name)
+        row.appendChild(subject_country)
+        row.appendChild(subject_organization)
+        row.appendChild(subject_dn)
+        row.appendChild(fingerprint_sha1)
+        row.appendChild(ja4x)
+        row.appendChild(timestamp)
+        // Add the row element to the table
+        tlsTable.appendChild(row)
       })
+    }
+    function tlsQuery() {
+
+      tlsTable = document.querySelector("table")
+
+      for (var i = 1; i < tlsTable.rows.length;) { tlsTable.deleteRow(i); }
+
+      fetch("/TLSquery", { method: "POST", body: new URLSearchParams({ 'pg': pg.value, 'limit': limit, "offset": offset }) })
+        .then(response => response.json()) // Read the JSON body of the response
+        .then(tlsList => {
+          tlsList.forEach(tls => {
+            // Create the table row
+            row = document.createElement("tr")
+            // Create the table data elements and extract corresponding values from received `person`
+            address = document.createElement("td")
+            address.innerHTML = tls.Address
+            port = document.createElement("td")
+            port.innerHTML = tls.Port
+            conn_status = document.createElement("td")
+            conn_status.innerHTML = tls.Status
+            version = document.createElement("td")
+            version.innerHTML = tls.Version
+            serial_number = document.createElement("td")
+            serial_number.innerHTML = tls.Serial_Number
+            issuer_common_name = document.createElement("td")
+            issuer_common_name.innerHTML = tls.Issuer_Common_Name
+            issuer_country = document.createElement("td")
+            issuer_country.innerHTML = tls.Issuer_Country
+            issuer_organization = document.createElement("td")
+            issuer_organization.innerHTML = tls.Issuer_Organization
+            issuer_dn = document.createElement("td")
+            issuer_dn.innerHTML = tls.Issuer_DN
+            subject_common_name = document.createElement("td")
+            subject_common_name.innerHTML = tls.Subject_Common_Name
+            subject_country = document.createElement("td")
+            subject_country.innerHTML = tls.Subject_Country
+            subject_organization = document.createElement("td")
+            subject_organization.innerHTML = tls.Subject_Organization
+            subject_dn = document.createElement("td")
+            subject_dn.innerHTML = tls.Subject_DN
+            fingerprint_sha1 = document.createElement("td")
+            fingerprint_sha1.innerHTML = tls.Fingerprint_SHA1
+            ja4x = document.createElement("td")
+            ja4x.innerHTML = tls.JA4X
+            timestamp = document.createElement("td")
+            timestamp.innerHTML = tls.Timestamp
+            // Add the data elements to the row
+            row.appendChild(address)
+            row.appendChild(port)
+            row.appendChild(conn_status)
+            row.appendChild(version)
+            row.appendChild(serial_number)
+            row.appendChild(issuer_common_name)
+            row.appendChild(issuer_country)
+            row.appendChild(issuer_organization)
+            row.appendChild(issuer_dn)
+            row.appendChild(subject_common_name)
+            row.appendChild(subject_country)
+            row.appendChild(subject_organization)
+            row.appendChild(subject_dn)
+            row.appendChild(fingerprint_sha1)
+            row.appendChild(ja4x)
+            row.appendChild(timestamp)
+            // Add the row element to the table
+            tlsTable.appendChild(row)
+          })
+        })
     }
   </script>
 </body>

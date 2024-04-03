@@ -1,12 +1,13 @@
 rule_name: Trochilus_Banner
-guid: 633a2dec-14a5-4a47-be96-f3c2279ea728
+guid: 5c6cfc17-56a0-4e70-a0bf-1937df71e9d2
 family: Trochilus
 version: ""
-description: "Sends a custom Trochilus probe and uses a C2 module to decrypt valid Trochilus traffic"
+description: Sends a custom Trochilus probe and uses a C2 module to decrypt valid
+  Trochilus traffic
 classification: RAT
 references:
-- "C2Links Research"
-created: "2024-02-29 19:39:47"
+- C2Links Research
+created: "2024-04-02 14:17:49"
 targets:
 - source: shodan
   targetquery: []

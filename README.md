@@ -11,9 +11,10 @@ My ultimate aim is to facilitate the effortless creation of detection signatures
 
 That being said, I've also tailored this tool for individuals like myself who conduct or aspire to conduct their own scanning activities, without necessarily having the means or inclination to share their signatures publicly.
 
+
 # Installation Overview
 
-Tested and validated on Ubunutu 22.04, but should work wherever GO and Postgres can be installed.
+Tested and validated on Ubuntu 22.04, but should work wherever GO and Postgres can be installed.
 
 I have created two videos to go over the installation process.
 
@@ -41,6 +42,30 @@ y
 sudo -u postgres psql -c "ALTER USER nowhere2hide PASSWORD 'nowhere2hide';"
 sudo -u postgres createdb nowhere2hide
 ```
+## Rebuild Plugins
+
+NoWhere2Hide uses plugins for both collection and advanced detections. When you first run the program you will most likely get a error about the plugins being related to a different version. 
+
+To fix, you will have to rebuild the plugins by executing the below commands or by running the supplied script, `rebuild_plugins.sh`. 
+
+```
+go build -buildmode=plugin -o plugin/targets/badasn/badasn.so plugin/targets/badasn/badasn.go 
+go build -buildmode=plugin -o plugin/targets/censys/censys.so plugin/targets/censys/censys.go 
+go build -buildmode=plugin -o plugin/targets/shodan/shodan.so plugin/targets/shodan/shodan.go 
+go build -buildmode=plugin -o plugin/targets/ipsum/ipsum.so plugin/targets/ipsum/ipsum.go
+go build -buildmode=plugin -o plugin/c2/Trochilus/trochilus_banner.so plugin/c2/Trochilus/trochilus_banner.go 
+```
+
+## Add API keys
+
+While not necessary, if you have API keys (currently only support Shodan, Censys and HuntIO), you should add them in the `api.yaml` file. The current format of the file is below.
+
+```
+censys_api_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+censys_secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+shodan: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+huntio: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
 
 # Run
 
@@ -56,6 +81,34 @@ Navigate to http://localhost:6332 to get to the UI.
 You can additionally set the port to use by supplying the port as a argument `./main -port 12345` 
 
 By default the signatures are located in the folder, "../signatures", but this can also be changed by supplying the "signatures argument, `./main -signatures <path to signatures>`
+
+# Authentication
+
+NoWhere2Hide uses token(ish) authentication for most of its capabilities. A token is generated for you when you first start the program. The token is printed to the console for easy access but can be retrieved from the Postgres database at anytime.
+
+![](.images/token.png)
+
+Not all the actions of NoWhere2Hide require authentication. 
+
+There is no authentication required for:
+ - Viewing of detected C2's
+ - Viewing and searching the scan data (banner,http,tls,jarm) or
+ - Viewing signatures
+ 
+ Authentication is required to: 
+ - Run a scan
+ - Create and / or modify signatures
+ - Delete databases
+ - Perform a retro hunt.
+
+To authenticate, simply click on the "Click here to login" button and enter your token.
+
+![](.images/authentication.png)
+
+If all goes well the click here to logon button changes to the below (Logged In (click to logout))
+
+![](.images/logon_success.png)
+
 
 # Overview
 

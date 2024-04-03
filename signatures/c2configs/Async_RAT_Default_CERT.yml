@@ -1,12 +1,12 @@
 rule_name: Async_RAT_Default_CERT
-guid: 589b61a6-8d91-4c4d-b1c6-ed1af07d697b
+guid: 952954db-7bc9-4371-b8fc-122f6328ade8
 family: Async RAT
 version: ""
 description: Detects default CERT used by Async RAT
 classification: RAT
 references:
 - https://embee-research.ghost.io/shodan-censys-queries/
-created: "2023-11-28 04:23:23"
+created: "2024-04-02 14:22:01"
 targets:
 - source: shodan
   targetquery:
@@ -15,6 +15,14 @@ targets:
   targetquery:
   - services.tls.certificates.leaf_data.subject.common_name:"AsyncRAT Server" or services.tls.certificates.leaf_data.issuer.common_name:"AsyncRAT
     Server"
+- source: badasn
+  targetquery: []
+- source: newdomain
+  targetquery: []
+- source: tdomain
+  targetquery: []
+- source: ipsum
+  targetquery: []
 scan_banner:
   enabled: false
   probefile: ""

@@ -92,6 +92,7 @@ func Collect(c2_configs []*nowhere2hide.C2_Config, runGUID string) ([]*nowhere2h
 	ips_final := utils.DedupeStringSlice(ips)
 	log.Info(fmt.Sprintf("Collect|%s|Info|Total unique IP's -> %d", runGUID, len(ips_final)))
 	log.Info(fmt.Sprintf("Collect|%s|Info|Total unique Ports -> %d", runGUID, len(utils.DedupeStringSlice(ports))))
+	log.Info(fmt.Sprintf("Collect|%s|Info|Total Targets -> %d", runGUID, len(targets)))
 
 	// Step 3: Return slice of ScanTarget structs
 

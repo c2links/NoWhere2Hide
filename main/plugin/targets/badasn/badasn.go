@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"nowhere2hide"
 	"nowhere2hide/utils"
@@ -29,7 +32,7 @@ func (m BADASN) Init() {
 	if err == nil {
 		log.Out = file
 	} else {
-		log.Info(fmt.Sprintf("Collect|badasn|Error|Error: Failed to log to file, using default stderr"))
+		log.Info("Collect|badasn|Error|Error: Failed to log to file, using default stderr")
 	}
 }
 
@@ -76,7 +79,7 @@ func (m BADASN) Get_Targets(query string, runGUID string) []nowhere2hide.Target 
 	owner := "c2links"
 	repo := "drop_asn_port_scan"
 	branch := "main"
-	filename := "out/asn_port_scan.json"
+	filename := "out/asn_port_scan.json.gz"
 
 	var msr []nowhere2hide.MassScan_Results
 
@@ -86,7 +89,24 @@ func (m BADASN) Get_Targets(query string, runGUID string) []nowhere2hide.Target 
 		log.Info(fmt.Sprintf("Collect|%s|badasn|Error|Error retrieving file from Git repo", runGUID))
 	}
 
-	err = json.Unmarshal([]byte(content), &msr)
+	gzData := []byte(content)
+	gzBuffer := bytes.NewBuffer(gzData)
+
+	gzipReader, err := gzip.NewReader(gzBuffer)
+	if err != nil {
+		fmt.Println("Error creating gzip reader:", err)
+	}
+	defer gzipReader.Close()
+
+	// Read the decompressed data from the gzip reader
+
+	decompressedData, err := ioutil.ReadAll(gzipReader)
+	if err != nil {
+		fmt.Println("Error reading decompressed data:", err)
+
+	}
+
+	err = json.Unmarshal(decompressedData, &msr)
 	if err != nil {
 		log.Info(fmt.Sprintf("Collect|%s|badasn|Error|Error with JSON -> %s", runGUID, err))
 	}

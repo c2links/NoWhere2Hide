@@ -10,11 +10,11 @@
   <div class="banner">
     <div>
       <h1></h1>
-    </div>  
+    </div>
   </div>
 
   <title>NoWhere2Hide</title>
-  
+
 </head>
 
 <div class="topnav" id="myTopnav">
@@ -30,70 +30,186 @@
   <a href="/readme.html">Readme</a>
 </div>
 
-<body>
+<!-- Login Form -->
+<div id="loginForm" class="login-popup-form">
+  <h2>Enter Token</h2>
+  <form>
+    <div>
+      <label for="token">API Token:</label>
+      <input type="text" size=50 id="jwt_token" name="jwt_token" required>
+    </div>
+    <br>
+    <button onclick="auth()">Submit</button>
+  </form>
+  <button onclick="closePopup('auth')">Close</button>
+</div>
 
-  
+<!-- Fail Form -->
+<div id="failForm" class="message-popup-form">
+  <h2>Invalid token</h2>
+  <button onclick="closePopup('fail')">Close</button>
+</div>
+
+<div id="loadedSuccessForm" class="message-popup-form">
+  <h2>Retro hunt finished successfully</h2>
+  <button onclick="closePopup('loadedSuccess')">Close</button>
+</div>
+
+<div id="loadedFailForm" class="message-popup-form">
+  <h2>Retro hunt failed. Possible bad token? Check logs.</h2>
+  <button onclick="closePopup('loadedFail')">Close</button>
+</div>
+
+<body>
+  <!-- 
+  Buttons to control the token authentication
+-->
+  <button type="button" id=logonButton class="logonButton" onclick="togglePopup('auth')">Click here to login!</button>
+  <button type="button" id=logoutButton class="logoutButton" onclick="logout()">Logged In (click to logout)</button>
+
+
+  <!--
+Script functions to facilitate authentication and setting the jwt in session storage
+-->
+
+  <script>
+    checkLogon()
+    // Function to toggle the visibility of the pop-up form
+
+    async function auth() {
+      event.preventDefault(); // Prevent default form submission
+      var jwt = document.getElementById('jwt_token').value;
+      try {
+        const response = await fetch("/Auth", { method: "POST", body: new URLSearchParams({ "c2-auth": jwt }) })
+        const data = await response.text()
+
+        if (data == "Success") {
+          closePopup('auth')
+          sessionStorage.setItem('jwtKey', jwt);
+          checkLogon()
+        }
+        else {
+          closePopup('auth')
+          togglePopup("fail")
+        }
+      }
+      catch (error) {
+        console.log(error)
+
+      }
+
+    }
+
+    function togglePopup(type) {
+      if (type == "auth") {
+        var popup = document.getElementById("loginForm");
+        popup.style.display = "block";
+      }
+
+      if (type == "fail") {
+        var popup = document.getElementById("failForm");
+        popup.style.display = "block";
+
+      }
+
+      if (type == "loadedSuccess") {
+        var popup = document.getElementById("loadedSuccessForm");
+        popup.style.display = "block";
+
+      }
+
+      if (type == "loadedFail") {
+        var popup = document.getElementById("loadedFailForm");
+        popup.style.display = "block";
+
+      }
+    }
+
+    function closePopup(type) {
+      if (type == "auth") {
+        document.getElementById("loginForm").style.display = "none";
+      }
+      if (type == "fail") {
+        document.getElementById("failForm").style.display = "none";
+      }
+      if (type == "loadedSuccess") {
+        var popup = document.getElementById("loadedSuccessForm");
+        popup.style.display = "none";
+
+      }
+
+      if (type == "loadedFail") {
+        var popup = document.getElementById("loadedFailForm");
+        popup.style.display = "none";
+
+      }
+    }
+
+    function checkLogon() {
+      const jwtKey = sessionStorage.getItem('jwtKey');
+      if (jwtKey) {
+        document.getElementById('logonButton').style.display = 'none';
+        document.getElementById('logoutButton').style.display = 'inline-block';
+      } else {
+        document.getElementById('logonButton').style.display = 'inline-block';
+        document.getElementById('logoutButton').style.display = 'none';
+
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem("jwtKey")
+      checkLogon()
+    }
+
+  </script>
+
   <h1>C2 Results</h1>
   <!-- 
     Specify the table that will be used to display the people database
   -->
-  <input type = "submit" name="retro" value="Click to reload detections (Retro Detect)" onclick="reload()">
-  <input type = "submit" name="huntio_certs" value="Click to load recent Hunt IO Cert Data" onclick="hunt_io_cert()">
+  <input type="submit" name="retro" value="Click to reload detections (Retro Detect)" onclick="reload()">
+
 
   <script>
 
-  load();
+    load();
 
-    function load(){
-      
-      fetch("/C2List",{method: "GET"})
-        .then(response => response.json()) // Read the JSON body of the response
-          .then(c2List => {
-            c2List.forEach(c2 => {
-              
-              var elementToRemove = document.getElementById(c2.Malware_Family);
-              if (elementToRemove){
-                elementToRemove.remove()
-              }
-              
+    async function load() {
 
-              var customButton = document.createElement('a');
-              customButton.id = c2.Malware_Family
-              customButton.href = '/c2.html?malware_family='+c2.Malware_Family; // Replace '#' with the actual URL
-              customButton.className = 'customButton';
-              customButton.innerHTML = c2.Malware_Family + " (" + c2.Count + ")";
+      const response = await fetch("/C2List", { method: "GET" })
+      const data = await response.json()  //.then(response => response.json()) // Read the JSON body of the response
+      data.forEach(c2 => {
 
-  // Append the link to the body or any other desired element
-  document.body.appendChild(customButton);
+        var elementToRemove = document.getElementById(c2.Malware_Family);
+        if (elementToRemove) {
+          elementToRemove.remove()
+        }
 
-            })
-        })
+
+        var customButton = document.createElement('a');
+        customButton.id = c2.Malware_Family
+        customButton.href = '/c2.html?malware_family=' + c2.Malware_Family; // Replace '#' with the actual URL
+        customButton.className = 'customButton';
+        customButton.innerHTML = c2.Malware_Family + " (" + c2.Count + ")";
+
+        // Append the link to the body or any other desired element
+        document.body.appendChild(customButton);
+
+      })
     }
-    
-    function reload(){
-      fetch("/Retro",{method: "GET"})
-        .then(response => response.text())
-          .then(success=> {
-            if (success == "Successful"){
-              load();
-              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
-              popupWindow.document.write("Detections Reloaded");
-            }        
-        })
-      }
 
-    function hunt_io_cert(){
-      fetch("/HuntIOCert",{method: "GET"})
-        .then(response => response.text())
-          .then(success=> {
-            if (success == "Successful"){
-              load();
-              const popupWindow = window.open('', 'Response Popup', 'width=400, height=300');
-              popupWindow.document.write("Hunt IO Certs loaded");
-            }        
-        })
+    async function reload() {
+      const response = await fetch("/Retro", { method: "POST", body: new URLSearchParams({ "c2-auth": sessionStorage.getItem('jwtKey') }) })
+      const data = await response.text()
+      if (data == "Successful") {
+        load();
+        togglePopup("loadedSuccess")
       }
-      
+      else { togglePopup("loadedFail") }
+    }
+
+
   </script>
 </body>
 

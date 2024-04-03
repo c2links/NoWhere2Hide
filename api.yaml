@@ -1,3 +1,4 @@
 censys_api_id: ""
 censys_secret: ""
 shodan: ""
+huntio: ""
