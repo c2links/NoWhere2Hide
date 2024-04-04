@@ -163,6 +163,7 @@ Script functions to facilitate authentication and setting the jwt in session sto
       getStatus()
     }
 
+
     async function createSigForm() {
 
       var form = document.createElement("form");
@@ -315,11 +316,20 @@ Script functions to facilitate authentication and setting the jwt in session sto
         statusTable.appendChild(row)
       })
     }
-    
+
     function refreshPage() {
 
       window.location.href = "/runscan.html"
     }
+
+    async function hunt_io_cert() {
+      const response = await fetch("/HuntIOCert", { method: "POST", body: new URLSearchParams({ "c2-auth": sessionStorage.getItem('jwtKey') }) })
+      const data = await response.text()
+      if (data == "Successful") {
+        togglePopup("success")
+      } else { togglePopup("fail") }
+    }
+
   </script>
 
 </body>

@@ -318,136 +318,157 @@ func zgrab2_scanner(scans []*nowhere2hide.Scan, runGUID string) chan nowhere2hid
 
 func zgrab2_add_scan_data(outputQueue chan nowhere2hide.GeneralResponse, runGUID string) {
 
+	log.Info(fmt.Sprintf("AddDB|%s|Info|Adding %d results to Database \n", runGUID, len(outputQueue)))
+
+	var wg sync.WaitGroup
+
+	// Define the number of goroutines (workers) to use
+	numWorkers := 50
+
+	// Spawn worker goroutines
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for response := range outputQueue {
+				addDB(response, runGUID)
+			}
+		}()
+	}
+
+	// Wait for all workers to finish
+	wg.Wait()
+}
+
+func addDB(response nowhere2hide.GeneralResponse, runGUID string) {
 	// Part 3 Add to Postgres Database
-	log.Info(fmt.Sprintf("AddDB|%s|Info|Adding results to Database \n", runGUID))
-	for response := range outputQueue {
 
-		if response.Data.Banner.Status == "success" {
+	if response.Data.Banner.Status == "success" {
 
-			//Attempt to convert banner hex code into readable text
-			var banner_text string
-			temp_text, err := hex.DecodeString(response.Data.Banner.Result.Banner)
+		//Attempt to convert banner hex code into readable text
+		var banner_text string
+		temp_text, err := hex.DecodeString(response.Data.Banner.Result.Banner)
 
-			if err != nil {
-				log.Info(fmt.Sprintf("AddDB|%s|Error|IP -> %s, PORT -> %s, ERROR -> %s", runGUID, response.IP, response.Port, err))
-				banner_text = ""
-			} else {
-				banner_text = string(temp_text)
-			}
-
-			//Save results into a Postgres Banner struct to add to the Database
-			var bannerDB nowhere2hide.DB_Banner
-			bannerDB.Uid = runGUID
-			bannerDB.Address = response.IP
-			bannerDB.Port = response.Port
-			bannerDB.Status = response.Data.Banner.Status
-			bannerDB.Banner_Hex = response.Data.Banner.Result.Banner
-			bannerDB.Banner_Text = banner_text
-			bannerDB.Banner_Length = response.Data.Banner.Result.Length
-			bannerDB.Timestamp = response.Data.Banner.Timestamp
-
-			err = db.AddBanner(bannerDB)
-			if err != nil {
-				log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, bannerDB))
-			}
+		if err != nil {
+			log.Info(fmt.Sprintf("AddDB|%s|Error|IP -> %s, PORT -> %s, ERROR -> %s", runGUID, response.IP, response.Port, err))
+			banner_text = ""
+		} else {
+			banner_text = string(temp_text)
 		}
 
-		if response.Data.TLS.Status == "success" {
+		//Save results into a Postgres Banner struct to add to the Database
+		var bannerDB nowhere2hide.DB_Banner
+		bannerDB.Uid = runGUID
+		bannerDB.Address = response.IP
+		bannerDB.Port = response.Port
+		bannerDB.Status = response.Data.Banner.Status
+		bannerDB.Banner_Hex = response.Data.Banner.Result.Banner
+		bannerDB.Banner_Text = banner_text
+		bannerDB.Banner_Length = response.Data.Banner.Result.Length
+		bannerDB.Timestamp = response.Data.Banner.Timestamp
 
-			//Save results into a Postgres tls struct to add to the Database
-			var tlsDB nowhere2hide.DB_TLS
-			tlsDB.Uid = runGUID
-			tlsDB.Address = response.IP
-			tlsDB.Port = response.Port
-			tlsDB.Status = response.Data.TLS.Status
-			tlsDB.Version = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Version
-			tlsDB.Serial_Number = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Serial_Number
+		err = db.AddBanner(bannerDB)
+		if err != nil {
+			log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, bannerDB))
+		}
+	}
 
-			if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Common_Name) > 0 {
-				tlsDB.Issuer_Common_Name = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Common_Name[0]
-			}
+	if response.Data.TLS.Status == "success" {
 
-			if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Country) > 0 {
-				tlsDB.Issuer_Country = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Country[0]
-			}
+		//Save results into a Postgres tls struct to add to the Database
+		var tlsDB nowhere2hide.DB_TLS
+		tlsDB.Uid = runGUID
+		tlsDB.Address = response.IP
+		tlsDB.Port = response.Port
+		tlsDB.Status = response.Data.TLS.Status
+		tlsDB.Version = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Version
+		tlsDB.Serial_Number = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Serial_Number
 
-			if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Organization) > 0 {
-				tlsDB.Issuer_Organization = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Organization[0]
-			}
-
-			tlsDB.Issuer_DN = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer_DN
-
-			if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Common_Name) > 0 {
-				tlsDB.Subject_Common_Name = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Common_Name[0]
-			}
-			if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Country) > 0 {
-				tlsDB.Subject_Country = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Country[0]
-			}
-			if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Organization) > 0 {
-				tlsDB.Subject_Organization = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Organization[0]
-			}
-
-			tlsDB.Subject_DN = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject_DN
-			tlsDB.Fingerprint_Md5 = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Fingerprint_Md5
-			tlsDB.Fingerprint_SHA1 = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Fingerprint_SHA1
-			tlsDB.Fingerprint_SHA256 = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Fingerprint_SHA256
-			tlsDB.JA4X = "N/A"
-			tlsDB.Timestamp = response.Data.TLS.Timestamp
-
-			err := db.AddTLS(tlsDB)
-			if err != nil {
-				log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, tlsDB))
-			}
+		if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Common_Name) > 0 {
+			tlsDB.Issuer_Common_Name = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Common_Name[0]
 		}
 
-		if response.Data.Jarm.Status == "success" {
-
-			//Save results into a Postgres jarm struct to add to the Database
-			var jarmDB nowhere2hide.DB_JARM
-			jarmDB.Uid = runGUID
-			jarmDB.Address = response.IP
-			jarmDB.Port = response.Port
-			jarmDB.Status = response.Data.Jarm.Status
-			jarmDB.JARM_Fingerprint = response.Data.Jarm.Result.Fingerprint
-			jarmDB.Timestamp = response.Data.Jarm.Timestamp
-
-			err := db.AddJarm(jarmDB)
-			if err != nil {
-				log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, jarmDB))
-			}
+		if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Country) > 0 {
+			tlsDB.Issuer_Country = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Country[0]
 		}
 
-		if response.Data.HTTP.Status != "connection-timeout" {
+		if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Organization) > 0 {
+			tlsDB.Issuer_Organization = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer.Organization[0]
+		}
 
-			// Decode base64 headers
-			headers, err := base64.StdEncoding.DecodeString(response.Data.HTTP.Result.Response.Headers_Raw)
-			if err != nil {
-				headers = []byte("ERROR PARSING HEADERS")
-			}
+		tlsDB.Issuer_DN = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Issuer_DN
 
-			//Save results into a Postgres http struct to add to the Database
-			var httpDB nowhere2hide.DB_HTTP
-			httpDB.Uid = runGUID
-			httpDB.Address = response.IP
-			httpDB.Port = response.Port
-			httpDB.Status = response.Data.HTTP.Status
-			httpDB.Status_Line = response.Data.HTTP.Result.Response.Status_Line
-			httpDB.Status_Code = response.Data.HTTP.Result.Response.Status_Code
-			httpDB.Protocol_Name = response.Data.HTTP.Result.Response.Protocol.Name
-			httpDB.Body = response.Data.HTTP.Result.Response.Body
-			httpDB.Body_SHA256 = response.Data.HTTP.Result.Response.Body_Sha256
-			httpDB.Headers = string(headers)
-			httpDB.Timestamp = response.Data.HTTP.Timestamp
+		if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Common_Name) > 0 {
+			tlsDB.Subject_Common_Name = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Common_Name[0]
+		}
+		if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Country) > 0 {
+			tlsDB.Subject_Country = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Country[0]
+		}
+		if len(response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Organization) > 0 {
+			tlsDB.Subject_Organization = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject.Organization[0]
+		}
 
-			err = db.AddHTTP(httpDB)
-			if err != nil {
-				log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, httpDB))
-			}
+		tlsDB.Subject_DN = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Subject_DN
+		tlsDB.Fingerprint_Md5 = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Fingerprint_Md5
+		tlsDB.Fingerprint_SHA1 = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Fingerprint_SHA1
+		tlsDB.Fingerprint_SHA256 = response.Data.TLS.Result.Handshake_Log.Server_Certificates.Certificate.Parsed.Fingerprint_SHA256
+		tlsDB.JA4X = "N/A"
+		tlsDB.Timestamp = response.Data.TLS.Timestamp
+
+		err := db.AddTLS(tlsDB)
+		if err != nil {
+			log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, tlsDB))
+		}
+	}
+
+	if response.Data.Jarm.Status == "success" {
+
+		//Save results into a Postgres jarm struct to add to the Database
+		var jarmDB nowhere2hide.DB_JARM
+		jarmDB.Uid = runGUID
+		jarmDB.Address = response.IP
+		jarmDB.Port = response.Port
+		jarmDB.Status = response.Data.Jarm.Status
+		jarmDB.JARM_Fingerprint = response.Data.Jarm.Result.Fingerprint
+		jarmDB.Timestamp = response.Data.Jarm.Timestamp
+
+		err := db.AddJarm(jarmDB)
+		if err != nil {
+			log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, jarmDB))
+		}
+	}
+
+	if response.Data.HTTP.Status != "connection-timeout" {
+
+		// Decode base64 headers
+		headers, err := base64.StdEncoding.DecodeString(response.Data.HTTP.Result.Response.Headers_Raw)
+		if err != nil {
+			headers = []byte("ERROR PARSING HEADERS")
+		}
+
+		//Save results into a Postgres http struct to add to the Database
+		var httpDB nowhere2hide.DB_HTTP
+		httpDB.Uid = runGUID
+		httpDB.Address = response.IP
+		httpDB.Port = response.Port
+		httpDB.Status = response.Data.HTTP.Status
+		httpDB.Status_Line = response.Data.HTTP.Result.Response.Status_Line
+		httpDB.Status_Code = response.Data.HTTP.Result.Response.Status_Code
+		httpDB.Protocol_Name = response.Data.HTTP.Result.Response.Protocol.Name
+		httpDB.Body = response.Data.HTTP.Result.Response.Body
+		httpDB.Body_SHA256 = response.Data.HTTP.Result.Response.Body_Sha256
+		httpDB.Headers = string(headers)
+		httpDB.Timestamp = response.Data.HTTP.Timestamp
+
+		err = db.AddHTTP(httpDB)
+		if err != nil {
+			log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, httpDB))
 		}
 	}
 }
 
 func hunt_extract_certs(runGUID string) {
+	var certs []nowhere2hide.HuntIO_Certs
 
 	api_keys, err := utils.LoadAPI()
 	if err != nil {
@@ -497,11 +518,42 @@ func hunt_extract_certs(runGUID string) {
 		count = count + 1
 		line := scanner.Bytes()
 		json.Unmarshal(line, &temp)
-		err := hunt_add_cert(temp, runGUID)
-		if err != nil {
-			log.Info(fmt.Sprintf("Scan|%s|hunt_cert|Error|Error adding Hunt IO Certs to DB: %s\n", runGUID, err))
-		}
+		certs = append(certs, temp)
+
+		//err := hunt_add_cert(temp, runGUID)
+		//if err != nil {
+		//	log.Info(fmt.Sprintf("Scan|%s|hunt_cert|Error|Error adding Hunt IO Certs to DB: %s\n", runGUID, err))
+		//}
 	}
+	log.Info(fmt.Sprintf("Scan|%s|hunt_cert|info|Extracted %d certs\n", runGUID, len(certs)))
+
+	var wg sync.WaitGroup
+	numWorkers := 50
+
+	recordChan := make(chan nowhere2hide.HuntIO_Certs, len(certs))
+
+	for _, record := range certs {
+		recordChan <- record
+	}
+	close(recordChan)
+
+	// Spawn worker goroutines
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for response := range recordChan {
+				// Insert record into the database
+				err := hunt_add_cert(response, runGUID)
+				if err != nil {
+					log.Info(fmt.Sprintf("Scan|%s|hunt_cert|Error|Error loading cert into DB: %s\n", runGUID, err))
+				}
+			}
+		}()
+	}
+
+	// Wait for all workers to finish
+	wg.Wait()
 }
 
 func hunt_add_cert(response nowhere2hide.HuntIO_Certs, runGUID string) error {
