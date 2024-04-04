@@ -323,7 +323,7 @@ func zgrab2_add_scan_data(outputQueue chan nowhere2hide.GeneralResponse, runGUID
 	var wg sync.WaitGroup
 
 	// Define the number of goroutines (workers) to use
-	numWorkers := 50
+	numWorkers := 10
 
 	// Spawn worker goroutines
 	for i := 0; i < numWorkers; i++ {
@@ -528,7 +528,7 @@ func hunt_extract_certs(runGUID string) {
 	log.Info(fmt.Sprintf("Scan|%s|hunt_cert|info|Extracted %d certs\n", runGUID, len(certs)))
 
 	var wg sync.WaitGroup
-	numWorkers := 50
+	numWorkers := 10
 
 	recordChan := make(chan nowhere2hide.HuntIO_Certs, len(certs))
 
