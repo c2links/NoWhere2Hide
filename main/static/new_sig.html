@@ -30,6 +30,7 @@
   <a href="/new_sig.html" class="active">Create New Signature</a>
   <a href="/view_sigs.html">View / Edit Signatures</a>
   <a href="/clear_db.html">Clear Databases</a>
+  <a href="/utils.html">Utilities</a>
   <a href="/readme.html">Readme</a>
 </div>
 <!-- Login Form -->
@@ -307,6 +308,12 @@ Script functions to facilitate authentication and setting the jwt in session sto
       be.text = "BinaryEdge (Future)";
       be.value = "binaryedge";
       targetSelect.add(be);
+
+      //IPLIST
+      var ipl = document.createElement("option");
+      ipl.text = "IP List (Add IPs in this format -> IP:PORT,IP:PORT)";
+      ipl.value = "iplist";
+      targetSelect.add(ipl);
 
 
       input_container.appendChild(targetSelect);

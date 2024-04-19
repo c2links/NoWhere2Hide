@@ -1,0 +1,50 @@
+rule_name: SIGNATURE_DEVELOPMENT_IPLIST
+guid: 8ad2e9e8-207c-4ab6-a500-da370ba9d7d2
+family: UNDEFINED
+version: ""
+description: 'Use this signature to run TLS / JARM / HTTP and Banner scans on a list
+  of IP''s. '
+classification: Other
+references:
+- ""
+created: "2024-04-19 16:03:56"
+targets:
+- source: shodan
+  targetquery: []
+- source: censys
+  targetquery: []
+- source: badasn
+  targetquery: []
+- source: newdomain
+  targetquery: []
+- source: tdomain
+  targetquery: []
+- source: ipsum
+  targetquery: []
+- source: iplist
+  targetquery:
+  - 91.92.249.96:80,91.92.249.96:8080,91.92.249.96:443,91.92.249.96:8443,45.142.182.95:80,45.142.182.95:8080,45.142.182.95:443,45.142.182.95:8443,104.248.150.52:80,104.248.150.52:8080,104.248.150.52:443,104.248.150.52:8443,45.156.24.179:80,45.156.24.179:8080,45.156.24.179:443,45.156.24.179:8443,91.92.243.156:80,91.92.243.156:8080,91.92.243.156:443,91.92.243.156:8443,93.123.85.86:80,93.123.85.86:8080,93.123.85.86:443,93.123.85.86:8443,64.227.96.75:80,64.227.96.75:8080,64.227.96.75:443,64.227.96.75:8443,46.29.162.49:80,46.29.162.49:8080,46.29.162.49:443,46.29.162.49:8443,205.185.122.208:80,205.185.122.208:8080,205.185.122.208:443,205.185.122.208:8443,45.63.6.19:80,45.63.6.19:8080,45.63.6.19:443,45.63.6.19:8443,154.12.88.17:80,154.12.88.17:8080,154.12.88.17:443,154.12.88.17:8443,194.26.192.53:80,194.26.192.53:8080,194.26.192.53:443,194.26.192.53:8443
+scan_banner:
+  enabled: true
+  probefile: ""
+scan_http:
+  enabled: true
+  method: GET
+  endpoint: /
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: false
+  retryhttps: false
+  https: true
+  maxredirects: 0
+scan_tls:
+  enabled: true
+scan_jarm:
+  enabled: true
+detection:
+  module: false
+  module_name: ""
+  simple: false
+  condition: all
+  queries: []

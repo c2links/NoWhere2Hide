@@ -8,6 +8,7 @@ import (
 	"nowhere2hide"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -418,6 +419,7 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 	var badasn []string
 	var newdomain []string
 	var ipsum []string
+	var iplist []string
 	var tdomain []string
 
 	//var binaryedge []string
@@ -428,7 +430,7 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 		if element == "Rule_Name" {
 			if strings.Contains(value[0], " ") {
 				w.Write([]byte("Rule name cannot have spaces"))
-				log.Info(fmt.Sprintf("UI Error -> Rule name cannot have spaces"))
+				log.Info("UI Error -> Rule name cannot have spaces")
 			} else {
 				sig_config.Rule_Name = value[0]
 			}
@@ -476,6 +478,17 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if value[0] == "ipsum" {
 				ipsum = append(ipsum, "enabled")
+			}
+			if value[0] == "iplist" {
+
+				pattern := `^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+)(,\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+)*$`
+				regex := regexp.MustCompile(pattern)
+				if regex.MatchString(value[1]) {
+					iplist = append(iplist, value[1])
+				} else {
+					w.Write([]byte("IP LIST was not in the right format"))
+					log.Info("Create / Edit Signature -> IP LIST was not in the right format")
+				}
 			}
 
 			/*
@@ -548,6 +561,7 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 	var newdomainTargets nowhere2hide.C2_Target
 	var tdomainTargets nowhere2hide.C2_Target
 	var ipsumTargets nowhere2hide.C2_Target
+	var iplistTargets nowhere2hide.C2_Target
 
 	// var binaryedgeTargets nowhere2hide.C2_Target
 	// var urlioTargets nowhere2hide.C2_Target
@@ -575,6 +589,10 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 	ipsumTargets.Source = "ipsum"
 	ipsumTargets.TargetQuery = ipsum
 	c2_targets = append(c2_targets, ipsumTargets)
+
+	iplistTargets.Source = "iplist"
+	iplistTargets.TargetQuery = iplist
+	c2_targets = append(c2_targets, iplistTargets)
 
 	/*
 		binaryedgeTargets.Source = "badasn"
