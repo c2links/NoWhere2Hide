@@ -1,5 +1,5 @@
 rule_name: Sliver_Multiplayer_Cert
-guid: 0321ee3b-d3e0-434a-8ce4-026ad7fed00b
+guid: bdbe1fc4-df0f-4d1f-be6b-a8ee0fff2013
 family: Sliver
 version: ""
 description: 'Simple query -  based on "operators" and "multiplayer" certificate values
@@ -7,7 +7,7 @@ description: 'Simple query -  based on "operators" and "multiplayer" certificate
 classification: OST
 references:
 - https://twitter.com/embee_research/status/1660922163002757120
-created: "2024-04-02 14:18:11"
+created: "2024-04-18 23:35:28"
 targets:
 - source: shodan
   targetquery:
@@ -16,15 +16,13 @@ targets:
   targetquery:
   - services:(tls.certificates.leaf_data.subject.common_name:multiplayer and tls.certificates.leaf_data.issuer.common_name:operators)
 - source: badasn
-  targetquery:
-  - enabled
+  targetquery: []
 - source: newdomain
   targetquery: []
 - source: tdomain
   targetquery: []
 - source: ipsum
-  targetquery:
-  - enabled
+  targetquery: []
 scan_banner:
   enabled: false
   probefile: ""

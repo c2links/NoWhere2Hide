@@ -1,12 +1,12 @@
 rule_name: Quasar_Default_Banner
-guid: 171cbeaf-0889-4b5c-9e1a-5b8a51d21c19
+guid: 032fd5ac-f741-47fd-8d6e-91629d46b691
 family: Quasar RAT
 version: ""
 description: Checks default banner of Quasar
 classification: RAT
 references:
 - C2Links Research
-created: "2024-04-02 14:18:46"
+created: "2024-04-18 23:35:11"
 targets:
 - source: shodan
   targetquery: []
@@ -15,15 +15,13 @@ targets:
   - same_service(services.banner_hex="40000000*" AND (services.port=4782 OR services.port=443
     OR services.port=80 OR services.port=8080 OR services.port=8443))
 - source: badasn
-  targetquery:
-  - enabled
+  targetquery: []
 - source: newdomain
   targetquery: []
 - source: tdomain
   targetquery: []
 - source: ipsum
-  targetquery:
-  - enabled
+  targetquery: []
 scan_banner:
   enabled: true
   probefile: ""

@@ -1,5 +1,5 @@
 rule_name: Metasploit_SSL_CERT
-guid: aa0d8013-5492-435e-a97c-aba299484543
+guid: e39b4604-c60d-4a30-9dd3-4b121f940398
 family: Metasploit
 version: ""
 description: Checks SSL Cert used for Metasploit
@@ -8,7 +8,7 @@ references:
 - |
   https://github.com/lothos612/shodan/blob/main/README.md
   https://github.com/thehappydinoa/awesome-censys-queries#advanced-queries
-created: "2024-04-02 14:19:00"
+created: "2024-04-18 23:34:56"
 targets:
 - source: shodan
   targetquery:
@@ -18,15 +18,13 @@ targets:
   - 'services.http.response.html_title: "Metasploit" and (services.tls.certificates.leaf_data.subject.organization:
     "Rapid7" or services.tls.certificates.leaf_data.subject.common_name: "MetasploitSelfSignedCA")'
 - source: badasn
-  targetquery:
-  - enabled
+  targetquery: []
 - source: newdomain
   targetquery: []
 - source: tdomain
   targetquery: []
 - source: ipsum
-  targetquery:
-  - enabled
+  targetquery: []
 scan_banner:
   enabled: false
   probefile: ""

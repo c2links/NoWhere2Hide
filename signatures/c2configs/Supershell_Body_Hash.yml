@@ -1,5 +1,5 @@
 rule_name: Supershell_Body_Hash
-guid: 5c045492-92bb-4463-b042-cae48a33ead2
+guid: ce97378e-4c47-4b5c-8ea3-3194e3f6c142
 family: Supershell
 version: ""
 description: |-
@@ -9,7 +9,7 @@ description: |-
 classification: Admin / Panel
 references:
 - https://twitter.com/nahamike01/status/1643906047583879168
-created: "2024-04-03 07:58:01"
+created: "2024-04-18 23:35:44"
 targets:
 - source: shodan
   targetquery:
@@ -18,15 +18,13 @@ targets:
   targetquery:
   - services.http.response.body_hash="sha1:c023c2f42e6fa22f6b0f5284f2c24d8abcef6191"
 - source: badasn
-  targetquery:
-  - enabled
+  targetquery: []
 - source: newdomain
   targetquery: []
 - source: tdomain
   targetquery: []
 - source: ipsum
-  targetquery:
-  - enabled
+  targetquery: []
 scan_banner:
   enabled: false
   probefile: ""

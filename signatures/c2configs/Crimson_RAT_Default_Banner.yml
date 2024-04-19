@@ -1,12 +1,12 @@
 rule_name: Crimson_RAT_Default_Banner
-guid: 02e99149-7e40-484e-ab5c-90904c87ecbc
+guid: 373f073b-488b-4141-9f2a-f4f26f5077e2
 family: Crimson RAT
 version: ""
 description: Checks default banner of Crimson RAT
 classification: RAT
 references:
 - https://www.forescout.com/resources/the-apt36-crimson-remote-access-trojan-rat/
-created: "2024-04-02 14:20:32"
+created: "2024-04-18 23:34:46"
 targets:
 - source: shodan
   targetquery:
@@ -15,15 +15,13 @@ targets:
   targetquery:
   - services.banner="*info=command"
 - source: badasn
-  targetquery:
-  - enabled
+  targetquery: []
 - source: newdomain
   targetquery: []
 - source: tdomain
   targetquery: []
 - source: ipsum
-  targetquery:
-  - enabled
+  targetquery: []
 scan_banner:
   enabled: true
   probefile: ""

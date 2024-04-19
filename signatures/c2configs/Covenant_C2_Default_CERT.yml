@@ -1,30 +1,28 @@
 rule_name: Covenant_C2_Default_CERT
-guid: 35e7571c-a125-44c7-bd7e-87333411dc82
+guid: fbe80e7b-0333-43b8-8b1a-8cff89165fd0
 family: Covenant C2
 version: ""
 description: Detects default cert for Covenant C2 Framework
 classification: OST
 references:
 - https://github.com/BushidoUK/OSINT-SearchOperators/blob/main/ShodanAdversaryInfa.md
-created: "2024-04-02 14:22:22"
+created: "2024-04-18 23:34:37"
 targets:
 - source: shodan
   targetquery:
-  - ssl:Covenant http.component:Blazor
   - http.favicon.hash:-737603591
+  - ssl:Covenant http.component:Blazor
 - source: censys
   targetquery:
   - services.tls.certificates.leaf_data.subject_dn="CN=Covenant"
 - source: badasn
-  targetquery:
-  - enabled
+  targetquery: []
 - source: newdomain
   targetquery: []
 - source: tdomain
   targetquery: []
 - source: ipsum
-  targetquery:
-  - enabled
+  targetquery: []
 scan_banner:
   enabled: false
   probefile: ""
