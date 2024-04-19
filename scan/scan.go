@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -24,6 +25,14 @@ import (
 	"github.com/zmap/zgrab2/modules/banner"
 	"github.com/zmap/zgrab2/modules/http"
 	"github.com/zmap/zgrab2/modules/jarm"
+)
+
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "nowhere2hide"
+	password = "nowhere2hide"
+	dbname   = "nowhere2hide"
 )
 
 /*
@@ -320,10 +329,29 @@ func zgrab2_add_scan_data(outputQueue chan nowhere2hide.GeneralResponse, runGUID
 
 	log.Info(fmt.Sprintf("AddDB|%s|Info|Adding %d results to Database \n", runGUID, len(outputQueue)))
 
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+
+	// open database
+	dbConn, err := sql.Open("postgres", psqlconn)
+	if err != nil {
+		dbConn.Close()
+
+	}
+
+	// close database
+	defer dbConn.Close()
+
+	// check db
+	err = dbConn.Ping()
+	if err != nil {
+		dbConn.Close()
+
+	}
+
 	var wg sync.WaitGroup
 
 	// Define the number of goroutines (workers) to use
-	numWorkers := 10
+	numWorkers := 50
 
 	// Spawn worker goroutines
 	for i := 0; i < numWorkers; i++ {
@@ -331,16 +359,39 @@ func zgrab2_add_scan_data(outputQueue chan nowhere2hide.GeneralResponse, runGUID
 		go func() {
 			defer wg.Done()
 			for response := range outputQueue {
-				addDB(response, runGUID)
+				addDB(dbConn, response, runGUID)
 			}
 		}()
 	}
 
 	// Wait for all workers to finish
 	wg.Wait()
+
+	log.Info(fmt.Sprintf("Scan|%s|AddDB|info|loaded scan data in databases\n", runGUID))
+
+	err = db.Remove_TLS_Duplicates(dbConn)
+	if err != nil {
+		log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping TLS databse -> %s\n", runGUID, err))
+	}
+
+	err = db.Remove_Banner_Duplicates(dbConn)
+	if err != nil {
+		log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping Banner databse -> %s\n", runGUID, err))
+	}
+
+	err = db.Remove_HTTP_Duplicates(dbConn)
+	if err != nil {
+		log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping HTTP databse -> %s\n", runGUID, err))
+	}
+
+	err = db.Remove_JARM_Duplicates(dbConn)
+	if err != nil {
+		log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping JARM databse -> %s\n", runGUID, err))
+	}
+
 }
 
-func addDB(response nowhere2hide.GeneralResponse, runGUID string) {
+func addDB(dbConn *sql.DB, response nowhere2hide.GeneralResponse, runGUID string) {
 	// Part 3 Add to Postgres Database
 
 	if response.Data.Banner.Status == "success" {
@@ -367,7 +418,7 @@ func addDB(response nowhere2hide.GeneralResponse, runGUID string) {
 		bannerDB.Banner_Length = response.Data.Banner.Result.Length
 		bannerDB.Timestamp = response.Data.Banner.Timestamp
 
-		err = db.AddBanner(bannerDB)
+		err = db.AddBanner(dbConn, bannerDB)
 		if err != nil {
 			log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, bannerDB))
 		}
@@ -415,7 +466,7 @@ func addDB(response nowhere2hide.GeneralResponse, runGUID string) {
 		tlsDB.JA4X = "N/A"
 		tlsDB.Timestamp = response.Data.TLS.Timestamp
 
-		err := db.AddTLS(tlsDB)
+		err := db.AddTLS(dbConn, tlsDB)
 		if err != nil {
 			log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, tlsDB))
 		}
@@ -432,7 +483,7 @@ func addDB(response nowhere2hide.GeneralResponse, runGUID string) {
 		jarmDB.JARM_Fingerprint = response.Data.Jarm.Result.Fingerprint
 		jarmDB.Timestamp = response.Data.Jarm.Timestamp
 
-		err := db.AddJarm(jarmDB)
+		err := db.AddJarm(dbConn, jarmDB)
 		if err != nil {
 			log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, jarmDB))
 		}
@@ -460,7 +511,7 @@ func addDB(response nowhere2hide.GeneralResponse, runGUID string) {
 		httpDB.Headers = string(headers)
 		httpDB.Timestamp = response.Data.HTTP.Timestamp
 
-		err = db.AddHTTP(httpDB)
+		err = db.AddHTTP(dbConn, httpDB)
 		if err != nil {
 			log.Info(fmt.Sprintf("AddDB|%s|Error|%s, DBB: %+v \n", runGUID, err, httpDB))
 		}
@@ -528,7 +579,7 @@ func hunt_extract_certs(runGUID string) {
 	log.Info(fmt.Sprintf("Scan|%s|hunt_cert|info|Extracted %d certs\n", runGUID, len(certs)))
 
 	var wg sync.WaitGroup
-	numWorkers := 10
+	numWorkers := 50
 
 	recordChan := make(chan nowhere2hide.HuntIO_Certs, len(certs))
 
@@ -538,25 +589,40 @@ func hunt_extract_certs(runGUID string) {
 	close(recordChan)
 
 	// Spawn worker goroutines
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+
+	// open database
+	dbConn, err := sql.Open("postgres", psqlconn)
+
+	// close database
+	defer dbConn.Close()
+
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for response := range recordChan {
 				// Insert record into the database
-				err := hunt_add_cert(response, runGUID)
+				err := hunt_add_cert(dbConn, response, runGUID)
 				if err != nil {
 					log.Info(fmt.Sprintf("Scan|%s|hunt_cert|Error|Error loading cert into DB: %s\n", runGUID, err))
 				}
 			}
 		}()
 	}
+	log.Info(fmt.Sprintf("Scan|%s|hunt_cert|info|loaded all certs in tls database\n", runGUID))
 
 	// Wait for all workers to finish
 	wg.Wait()
+	err = db.Remove_TLS_Duplicates(dbConn)
+	if err != nil {
+		log.Info(fmt.Sprintf("Scan|%s|hunt_cert|Error|Error deduping DB: %s\n", runGUID, err))
+	}
+	log.Info(fmt.Sprintf("Scan|%s|hunt_cert|info|TLS database deduped\n", runGUID))
+
 }
 
-func hunt_add_cert(response nowhere2hide.HuntIO_Certs, runGUID string) error {
+func hunt_add_cert(dbConn *sql.DB, response nowhere2hide.HuntIO_Certs, runGUID string) error {
 
 	var tlsDB nowhere2hide.DB_TLS
 	tlsDB.Uid = runGUID
@@ -602,7 +668,7 @@ func hunt_add_cert(response nowhere2hide.HuntIO_Certs, runGUID string) error {
 	tlsDB.JA4X = response.JA4X
 	tlsDB.Timestamp = response.SeenLast
 
-	err := db.AddTLS(tlsDB)
+	err := db.AddTLS(dbConn, tlsDB)
 	if err != nil {
 		return err
 	}

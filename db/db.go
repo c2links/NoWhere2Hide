@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"nowhere2hide"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
@@ -367,7 +368,6 @@ func create_tls() error {
 	defer db.Close()
 
 	return nil
-
 }
 
 func create_jarm() error {
@@ -409,7 +409,6 @@ func create_jarm() error {
 	defer db.Close()
 
 	return nil
-
 }
 
 func CheckC2Exists(c2_results nowhere2hide.C2Results) (bool, error) {
@@ -462,7 +461,6 @@ func CheckC2Exists(c2_results nowhere2hide.C2Results) (bool, error) {
 
 	db.Close()
 	return false, nil
-
 }
 
 func AddC2(c2_results nowhere2hide.C2Results) error {
@@ -497,220 +495,207 @@ func AddC2(c2_results nowhere2hide.C2Results) error {
 
 	defer db.Close()
 	return nil
-
 }
 
-func AddHTTP(db_http nowhere2hide.DB_HTTP) error {
-
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
-
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
-	if err != nil {
-		return err
-	}
-
-	// close database
-	defer db.Close()
-
-	// check db
-	err = db.Ping()
-	if err != nil {
-		return err
-	}
+func AddHTTP(db *sql.DB, db_http nowhere2hide.DB_HTTP) error {
 
 	insertDynStmt := `insert into "http"("uid", "address", "port", "status", "status_line","status_code", "protocol_name", "headers","body", "body_sha256", "timestamp")` +
 		`values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
-	result, err := db.Exec(insertDynStmt, db_http.Uid, db_http.Address, db_http.Port, db_http.Status, db_http.Status_Line, db_http.Status_Code, db_http.Protocol_Name,
+	_, err := db.Exec(insertDynStmt, db_http.Uid, db_http.Address, db_http.Port, db_http.Status, db_http.Status_Line, db_http.Status_Code, db_http.Protocol_Name,
 		db_http.Headers, db_http.Body, db_http.Body_SHA256, db_http.Timestamp)
 
 	if err != nil {
 		return err
 	}
-	log.Info(fmt.Sprintf("DB|Info|%s", result))
 
-	defer db.Close()
 	return nil
 }
 
-func AddJarm(db_jarm nowhere2hide.DB_JARM) error {
-
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
-
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
-	if err != nil {
-		return err
-	}
-
-	// close database
-	defer db.Close()
-
-	// check db
-	err = db.Ping()
-	if err != nil {
-		return err
-	}
+func AddJarm(db *sql.DB, db_jarm nowhere2hide.DB_JARM) error {
 
 	insertDynStmt := `insert into "jarm"("uid", "address", "port", "status","fingerprint","timestamp")` +
 		`values($1, $2, $3, $4, $5, $6)`
 
-	result, err := db.Exec(insertDynStmt, db_jarm.Uid, db_jarm.Address, db_jarm.Port, db_jarm.Status, db_jarm.JARM_Fingerprint, db_jarm.Timestamp)
+	_, err := db.Exec(insertDynStmt, db_jarm.Uid, db_jarm.Address, db_jarm.Port, db_jarm.Status, db_jarm.JARM_Fingerprint, db_jarm.Timestamp)
 
 	if err != nil {
 		return err
 	}
-	log.Info(fmt.Sprintf("DB|Info|%s", result))
-
-	defer db.Close()
 	return nil
 }
 
-func AddBanner(db_banner nowhere2hide.DB_Banner) error {
-
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
-
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
-	if err != nil {
-		return err
-	}
-
-	// close database
-	defer db.Close()
-
-	// check db
-	err = db.Ping()
-	if err != nil {
-		return err
-	}
+func AddBanner(db *sql.DB, db_banner nowhere2hide.DB_Banner) error {
 
 	insertDynStmt := `insert into "banner"("uid", "address", "port", "status","banner_hex","banner_text","banner_length","timestamp")` +
 		`values($1, $2, $3, $4, $5, $6, $7,$8)`
 
-	result, err := db.Exec(insertDynStmt, db_banner.Uid, db_banner.Address, db_banner.Port, db_banner.Status, db_banner.Banner_Hex, db_banner.Banner_Text, db_banner.Banner_Length, db_banner.Timestamp)
+	_, err := db.Exec(insertDynStmt, db_banner.Uid, db_banner.Address, db_banner.Port, db_banner.Status, db_banner.Banner_Hex, db_banner.Banner_Text, db_banner.Banner_Length, db_banner.Timestamp)
 
 	if err != nil {
-		result, err := db.Exec(insertDynStmt, db_banner.Uid, db_banner.Address, db_banner.Port, db_banner.Status, db_banner.Banner_Hex, "<NOWHERE2HIDE ERROR: COULDN'T CONVERT TEXT", db_banner.Banner_Length, db_banner.Timestamp)
+		_, err := db.Exec(insertDynStmt, db_banner.Uid, db_banner.Address, db_banner.Port, db_banner.Status, db_banner.Banner_Hex, "<NOWHERE2HIDE ERROR: COULDN'T CONVERT TEXT", db_banner.Banner_Length, db_banner.Timestamp)
 		if err != nil {
 			return err
-		} else {
-			log.Info(fmt.Sprintf("DB|Info|%s", result))
 		}
-		defer db.Close()
 
-	} else {
-		log.Info(fmt.Sprintf("DB|Info|%s", result))
 	}
 	return nil
 }
 
-func tlsCheck(fingerprint_sha256 string) (bool, string, error) {
+func AddTLS(db *sql.DB, db_tls nowhere2hide.DB_TLS) error {
 
-	var uid string
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	insertDynStmt := `insert into "tls"("uid", "address", "port", "status","version","serial_number","issuer_common_name","issuer_country",` +
+		`"issuer_organization","issuer_dn","subject_common_name","subject_country","subject_organization","subject_dn","fingerprint_md5","fingerprint_sha1",` +
+		`"fingerprint_sha256","ja4x","timestamp") values($1, $2, $3, $4, $5, $6, $7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
+	_, err := db.Exec(insertDynStmt, db_tls.Uid, db_tls.Address, db_tls.Port, db_tls.Status, db_tls.Version, db_tls.Serial_Number, db_tls.Issuer_Common_Name, db_tls.Issuer_Country,
+		db_tls.Issuer_Organization, db_tls.Issuer_DN, db_tls.Subject_Common_Name, db_tls.Subject_Country, db_tls.Subject_Organization, db_tls.Subject_DN,
+		db_tls.Fingerprint_Md5, db_tls.Fingerprint_SHA1, db_tls.Fingerprint_SHA256, db_tls.JA4X, db_tls.Timestamp)
+
 	if err != nil {
-		db.Close()
-		return false, uid, err
+		return err
 	}
 
-	// close database
-	defer db.Close()
-
-	// check db
-	err = db.Ping()
-	if err != nil {
-		db.Close()
-		return false, uid, err
-	}
-
-	rows, err := db.Query(`SELECT "uid","fingerprint_sha256" FROM "tls"`)
-	if err != nil {
-		db.Close()
-		return false, uid, err
-	}
-
-	for rows.Next() {
-		var tls_fingerprint_sha256 string
-
-		err = rows.Scan(&uid, &tls_fingerprint_sha256)
-		if err != nil {
-			db.Close()
-			return false, uid, err
-		}
-
-		if tls_fingerprint_sha256 == fingerprint_sha256 {
-			db.Close()
-			return true, uid, nil
-
-		}
-
-	}
-
-	db.Close()
-	return false, uid, nil
-
+	return nil
 }
 
-func AddTLS(db_tls nowhere2hide.DB_TLS) error {
+func Remove_TLS_Duplicates(db *sql.DB) error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	currentTime := time.Now().UTC()
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
+	// Format the time as a string in the PostgreSQL timestamp format
+	timestampString := currentTime.Format("2006-01-02T15:04:05Z")
+
+	statement := fmt.Sprintf(`WITH duplicates AS (`+
+		`SELECT id, address, port, fingerprint_sha256, timestamp, ROW_NUMBER() OVER (PARTITION BY address,port,fingerprint_sha256 ORDER BY id) AS row_num FROM tls) `+
+		`UPDATE tls AS t `+
+		`SET timestamp = '%s' `+
+		`FROM duplicates AS d `+
+		`WHERE t.id = d.id AND d.row_num = 1`, timestampString)
+
+	// Execute the UPDATE statement
+	_, err := db.Exec(statement)
 	if err != nil {
-		return err
+		log.Info(fmt.Sprintf("DB|TLS|ERROR|ERROR WITH DEDUPE UPDATE -> %s", err))
+
 	}
 
-	// close database
-	defer db.Close()
+	statement = fmt.Sprintf(`WITH duplicates AS (` +
+		`SELECT id, address, port,fingerprint_sha256, timestamp, ROW_NUMBER() OVER (PARTITION BY address, port, fingerprint_sha256 ORDER BY id) AS row_num FROM tls) ` +
+		`DELETE FROM tls ` +
+		`WHERE id IN (SELECT id FROM duplicates WHERE row_num > 1) `)
 
-	// check db
-	err = db.Ping()
+	_, err = db.Exec(statement)
+
 	if err != nil {
-		return err
+		log.Info(fmt.Sprintf("DB|TLS|ERROR|ERROR WITH DEDUPE DELETE -> %s", err))
 	}
 
-	exists, uid, err := tlsCheck(db_tls.Fingerprint_SHA256)
+	return nil
+}
+
+func Remove_Banner_Duplicates(db *sql.DB) error {
+
+	currentTime := time.Now().UTC()
+
+	// Format the time as a string in the PostgreSQL timestamp format
+	timestampString := currentTime.Format("2006-01-02T15:04:05Z")
+
+	statement := fmt.Sprintf(`WITH duplicates AS (`+
+		`SELECT id, address, port, banner_hex, timestamp, ROW_NUMBER() OVER (PARTITION BY address,port,banner_hex ORDER BY id) AS row_num FROM banner) `+
+		`UPDATE banner AS t `+
+		`SET timestamp = '%s' `+
+		`FROM duplicates AS d `+
+		`WHERE t.id = d.id AND d.row_num = 1`, timestampString)
+
+	// Execute the UPDATE statement
+	_, err := db.Exec(statement)
 	if err != nil {
-		log.Info(fmt.Sprintf("TLS Check Error: %s", err))
-	}
-
-	if !exists {
-		insertDynStmt := `insert into "tls"("uid", "address", "port", "status","version","serial_number","issuer_common_name","issuer_country",` +
-			`"issuer_organization","issuer_dn","subject_common_name","subject_country","subject_organization","subject_dn","fingerprint_md5","fingerprint_sha1",` +
-			`"fingerprint_sha256","ja4x","timestamp") values($1, $2, $3, $4, $5, $6, $7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`
-
-		result, err := db.Exec(insertDynStmt, db_tls.Uid, db_tls.Address, db_tls.Port, db_tls.Status, db_tls.Version, db_tls.Serial_Number, db_tls.Issuer_Common_Name, db_tls.Issuer_Country,
-			db_tls.Issuer_Organization, db_tls.Issuer_DN, db_tls.Subject_Common_Name, db_tls.Subject_Country, db_tls.Subject_Organization, db_tls.Subject_DN,
-			db_tls.Fingerprint_Md5, db_tls.Fingerprint_SHA1, db_tls.Fingerprint_SHA256, db_tls.JA4X, db_tls.Timestamp)
-
-		if err != nil {
-			return err
-		} else {
-			log.Info(fmt.Sprintf("DB|TLS|Info|%s", result))
-		}
-	} else {
-		log.Info(fmt.Sprintf("DB|TLS Check|Info|Already Exists: %s", db_tls.Fingerprint_SHA256))
-		insertDynStmt := `update "tls" set "timestamp" = $1 where "uid" = $2`
-
-		results, err := db.Exec(insertDynStmt, db_tls.Timestamp, uid)
-		if err != nil {
-			log.Info(fmt.Sprintf("DB|TLS Check|Error|%s", err))
-		}
-		log.Info(fmt.Sprintf("DB|TLS|Info|%s", results))
+		log.Info(fmt.Sprintf("DB|BANNER|ERROR|ERROR WITH DEDUPE UPDATE -> %s", err))
 
 	}
-	defer db.Close()
+
+	statement = fmt.Sprintf(`WITH duplicates AS (` +
+		`SELECT id, address, port,banner_hex, timestamp, ROW_NUMBER() OVER (PARTITION BY address, port, banner_hex ORDER BY id) AS row_num FROM banner) ` +
+		`DELETE FROM banner ` +
+		`WHERE id IN (SELECT id FROM duplicates WHERE row_num > 1) `)
+
+	_, err = db.Exec(statement)
+
+	if err != nil {
+		log.Info(fmt.Sprintf("DB|Banner|ERROR|ERROR WITH DEDUPE DELETE -> %s", err))
+	}
+
+	return nil
+}
+
+func Remove_JARM_Duplicates(db *sql.DB) error {
+
+	currentTime := time.Now().UTC()
+
+	// Format the time as a string in the PostgreSQL timestamp format
+	timestampString := currentTime.Format("2006-01-02T15:04:05Z")
+
+	statement := fmt.Sprintf(`WITH duplicates AS (`+
+		`SELECT id, address, port, fingerprint, timestamp, ROW_NUMBER() OVER (PARTITION BY address,port,fingerprint ORDER BY id) AS row_num FROM jarm) `+
+		`UPDATE jarm AS t `+
+		`SET timestamp = '%s' `+
+		`FROM duplicates AS d `+
+		`WHERE t.id = d.id AND d.row_num = 1`, timestampString)
+
+	// Execute the UPDATE statement
+	_, err := db.Exec(statement)
+	if err != nil {
+		log.Info(fmt.Sprintf("DB|JARM|ERROR|ERROR WITH DEDUPE UPDATE -> %s", err))
+
+	}
+
+	statement = fmt.Sprintf(`WITH duplicates AS (` +
+		`SELECT id, address, port,fingerprint, timestamp, ROW_NUMBER() OVER (PARTITION BY address, port, fingerprints ORDER BY id) AS row_num FROM jarm) ` +
+		`DELETE FROM jarm ` +
+		`WHERE id IN (SELECT id FROM duplicates WHERE row_num > 1) `)
+
+	_, err = db.Exec(statement)
+
+	if err != nil {
+		log.Info(fmt.Sprintf("DB|JARM|ERROR|ERROR WITH DEDUPE DELETE -> %s", err))
+	}
+
+	return nil
+}
+
+func Remove_HTTP_Duplicates(db *sql.DB) error {
+
+	currentTime := time.Now().UTC()
+
+	// Format the time as a string in the PostgreSQL timestamp format
+	timestampString := currentTime.Format("2006-01-02T15:04:05Z")
+
+	statement := fmt.Sprintf(`WITH duplicates AS (`+
+		`SELECT id, address, port, body_sha256, timestamp, ROW_NUMBER() OVER (PARTITION BY address,port,body_sha256 ORDER BY id) AS row_num FROM http) `+
+		`UPDATE http AS t `+
+		`SET timestamp = '%s' `+
+		`FROM duplicates AS d `+
+		`WHERE t.id = d.id AND d.row_num = 1`, timestampString)
+
+	// Execute the UPDATE statement
+	_, err := db.Exec(statement)
+	if err != nil {
+		log.Info(fmt.Sprintf("DB|HTTP|ERROR|ERROR WITH DEDUPE UPDATE -> %s", err))
+
+	}
+
+	statement = fmt.Sprintf(`WITH duplicates AS (` +
+		`SELECT id, address, port,body_sha256, timestamp, ROW_NUMBER() OVER (PARTITION BY address, port, body_sha256 ORDER BY id) AS row_num FROM http) ` +
+		`DELETE FROM http ` +
+		`WHERE id IN (SELECT id FROM duplicates WHERE row_num > 1) `)
+
+	_, err = db.Exec(statement)
+
+	if err != nil {
+		log.Info(fmt.Sprintf("DB|HTTP|ERROR|ERROR WITH DEDUPE DELETE -> %s", err))
+	}
+
 	return nil
 }
 
@@ -746,7 +731,6 @@ func AddStatus(job_status *nowhere2hide.Job_Status) error {
 
 	defer db.Close()
 	return nil
-
 }
 
 func UpdateStatus(job_status *nowhere2hide.Job_Status) error {
@@ -780,7 +764,6 @@ func UpdateStatus(job_status *nowhere2hide.Job_Status) error {
 
 	defer db.Close()
 	return nil
-
 }
 
 func UpdateC2(c2_results nowhere2hide.C2Results) error {
@@ -813,7 +796,6 @@ func UpdateC2(c2_results nowhere2hide.C2Results) error {
 
 	defer db.Close()
 	return nil
-
 }
 
 func BannerQuery(query string) ([]nowhere2hide.DB_Banner, error) {
