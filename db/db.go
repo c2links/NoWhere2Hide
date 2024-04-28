@@ -11,15 +11,35 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "nowhere2hide"
-	password = "nowhere2hide"
-	dbname   = "nowhere2hide"
-)
-
 var log = logrus.New()
+
+func GetConnectionString() string {
+	host, ok := os.LookupEnv("POSTGRES_HOST")
+	if !ok {
+		host = "localhost"
+	}
+
+	port, ok := os.LookupEnv("POSTGRES_PORT")
+	if !ok {
+		port = "5432"
+	}
+
+	user, ok := os.LookupEnv("POSTGRES_USER")
+	if !ok {
+		user = "nowhere2hide"
+	}
+
+	password, ok := os.LookupEnv("POSTGRES_PWD")
+	if !ok {
+		password = "nowhere2hide"
+	}
+
+	dbname, ok := os.LookupEnv("POSTGRES_DBNAME")
+	if !ok {
+		dbname = "nowhere2hide"
+	}
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+}
 
 func init() {
 
@@ -93,7 +113,7 @@ func InitDB() bool {
 func create_token() error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -123,7 +143,7 @@ func create_token() error {
 
 	log.Info(fmt.Sprintf("DB|Info|%s", result))
 
-	defer db.Close()
+	//defer db.Close()
 
 	return nil
 
@@ -132,7 +152,7 @@ func create_token() error {
 func create_status() error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -171,7 +191,7 @@ func create_status() error {
 
 	log.Info(fmt.Sprintf("DB|Info|%s", result))
 
-	defer db.Close()
+	//defer db.Close()
 
 	return nil
 
@@ -180,7 +200,7 @@ func create_status() error {
 func create_c2() error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -219,7 +239,7 @@ func create_c2() error {
 
 	log.Info(fmt.Sprintf("DB|Info|%s", result))
 
-	defer db.Close()
+	//defer db.Close()
 
 	return nil
 
@@ -228,7 +248,7 @@ func create_c2() error {
 func create_banner() error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -263,7 +283,7 @@ func create_banner() error {
 	}
 	log.Info(fmt.Sprintf("DB|Info|%s", results))
 
-	defer db.Close()
+	//defer db.Close()
 
 	return nil
 
@@ -272,7 +292,7 @@ func create_banner() error {
 func create_http() error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -310,7 +330,7 @@ func create_http() error {
 	}
 	log.Info(fmt.Sprintf("DB|Info|%s", results))
 
-	defer db.Close()
+	//defer db.Close()
 
 	return nil
 
@@ -319,7 +339,7 @@ func create_http() error {
 func create_tls() error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -365,7 +385,7 @@ func create_tls() error {
 	}
 	log.Info(fmt.Sprintf("DB|Info|%s", results))
 
-	defer db.Close()
+	//defer db.Close()
 
 	return nil
 }
@@ -373,7 +393,7 @@ func create_tls() error {
 func create_jarm() error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -406,7 +426,7 @@ func create_jarm() error {
 	}
 	log.Info(fmt.Sprintf("DB|Info|%s", results))
 
-	defer db.Close()
+	//defer db.Close()
 
 	return nil
 }
@@ -414,7 +434,7 @@ func create_jarm() error {
 func CheckC2Exists(c2_results nowhere2hide.C2Results) (bool, error) {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -459,14 +479,14 @@ func CheckC2Exists(c2_results nowhere2hide.C2Results) (bool, error) {
 
 	}
 
-	db.Close()
+	//db.Close()
 	return false, nil
 }
 
 func AddC2(c2_results nowhere2hide.C2Results) error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -493,7 +513,7 @@ func AddC2(c2_results nowhere2hide.C2Results) error {
 	}
 	log.Info(fmt.Sprintf("DB|Info|%s", result))
 
-	defer db.Close()
+	//defer db.Close()
 	return nil
 }
 
@@ -702,7 +722,7 @@ func Remove_HTTP_Duplicates(db *sql.DB) error {
 func AddStatus(job_status *nowhere2hide.Job_Status) error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -729,14 +749,14 @@ func AddStatus(job_status *nowhere2hide.Job_Status) error {
 	}
 	log.Info(fmt.Sprintf("DB|STATUS|Info|%s", result))
 
-	defer db.Close()
+	//defer db.Close()
 	return nil
 }
 
 func UpdateStatus(job_status *nowhere2hide.Job_Status) error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -762,14 +782,14 @@ func UpdateStatus(job_status *nowhere2hide.Job_Status) error {
 	}
 	log.Info(fmt.Sprintf("DB|Status|Info|%s", result))
 
-	defer db.Close()
+	//defer db.Close()
 	return nil
 }
 
 func UpdateC2(c2_results nowhere2hide.C2Results) error {
 
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -794,13 +814,13 @@ func UpdateC2(c2_results nowhere2hide.C2Results) error {
 	}
 	log.Info(fmt.Sprintf("DB|C2|Info|%s", results))
 
-	defer db.Close()
+	//defer db.Close()
 	return nil
 }
 
 func BannerQuery(query string) ([]nowhere2hide.DB_Banner, error) {
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -839,13 +859,13 @@ func BannerQuery(query string) ([]nowhere2hide.DB_Banner, error) {
 		results = append(results, result)
 
 	}
-	db.Close()
+	//db.Close()
 	return results, nil
 }
 
 func TLSQuery(query string) ([]nowhere2hide.DB_TLS, error) {
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -886,13 +906,13 @@ func TLSQuery(query string) ([]nowhere2hide.DB_TLS, error) {
 		results = append(results, result)
 
 	}
-	db.Close()
+	//db.Close()
 	return results, nil
 }
 
 func Query(table string, query string) ([]nowhere2hide.DB_Gen, error) {
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	psqlconn := GetConnectionString()
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)
@@ -931,6 +951,6 @@ func Query(table string, query string) ([]nowhere2hide.DB_Gen, error) {
 		results = append(results, result)
 
 	}
-	db.Close()
+	//db.Close()
 	return results, nil
 }
