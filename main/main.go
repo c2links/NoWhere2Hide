@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"nowhere2hide/db"
+	"nowhere2hide/utils"
 
 	"os"
 
@@ -323,13 +324,7 @@ func main() {
 	}
 
 	// Setup connection to our postgresql database
-	connString := `user=nowhere2hide
-	   	password=nowhere2hide
-	   	host=localhost
-	   	port=5432
-	   	dbname=nowhere2hide
-	   	sslmode=disable`
-
+	connString := utils.GetConnectionString()
 	db, err := sql.Open("postgres", connString)
 
 	if err != nil {
@@ -362,7 +357,19 @@ func main() {
 	if err != nil {
 		fmt.Println("error getting token")
 	}
+
 	fmt.Printf("Admin Token for Authentication is: %s", token)
+	// Only write to the auth log if this environment variable is set
+	_, ok := os.LookupEnv("NW2H_AUTH")
+	if ok {
+		afile, err := os.OpenFile("../logs/auth.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			fmt.Printf("Failed to open auth.log: %v", err)
+		} else {
+			afile.WriteString(fmt.Sprintf("%s\n", token))
+			afile.Close()
+		}
+	}
 
 	// Create router
 	r := newRouter()

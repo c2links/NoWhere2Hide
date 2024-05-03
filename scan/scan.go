@@ -27,14 +27,6 @@ import (
 	"github.com/zmap/zgrab2/modules/jarm"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "nowhere2hide"
-	password = "nowhere2hide"
-	dbname   = "nowhere2hide"
-)
-
 /*
 The Scanner function takes the output from the collector and creates scans that are to be run against the targets.Scans are done using ZGRAB banner, HTTP, TLS or JARM  modules.
 
@@ -329,10 +321,9 @@ func zgrab2_add_scan_data(outputQueue chan nowhere2hide.GeneralResponse, runGUID
 
 	log.Info(fmt.Sprintf("AddDB|%s|Info|Adding %d results to Database \n", runGUID, len(outputQueue)))
 
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	connString := utils.GetConnectionString()
+	dbConn, err := sql.Open("postgres", connString)
 
-	// open database
-	dbConn, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		dbConn.Close()
 
@@ -588,11 +579,8 @@ func hunt_extract_certs(runGUID string) {
 	}
 	close(recordChan)
 
-	// Spawn worker goroutines
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
-
-	// open database
-	dbConn, err := sql.Open("postgres", psqlconn)
+	connString := utils.GetConnectionString()
+	dbConn, err := sql.Open("postgres", connString)
 
 	// close database
 	defer dbConn.Close()

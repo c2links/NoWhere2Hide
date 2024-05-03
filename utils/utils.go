@@ -34,6 +34,34 @@ Input: asn number (no AS prefix)
 Output: slice of IP ranges for that ASN
 */
 
+func GetConnectionString() string {
+	host, ok := os.LookupEnv("POSTGRES_HOST")
+	if !ok {
+		host = "localhost"
+	}
+
+	port, ok := os.LookupEnv("POSTGRES_PORT")
+	if !ok {
+		port = "5432"
+	}
+
+	user, ok := os.LookupEnv("POSTGRES_USER")
+	if !ok {
+		user = "nowhere2hide"
+	}
+
+	password, ok := os.LookupEnv("POSTGRES_PWD")
+	if !ok {
+		password = "nowhere2hide"
+	}
+
+	dbname, ok := os.LookupEnv("POSTGRES_DBNAME")
+	if !ok {
+		dbname = "nowhere2hide"
+	}
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+}
+
 func ASN2CIDR(asn int) ([]string, error) {
 
 	// String slice container to hold results

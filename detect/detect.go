@@ -15,14 +15,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "nowhere2hide"
-	password = "nowhere2hide"
-	dbname   = "nowhere2hide"
-)
-
 var log = logrus.New()
 
 func init() {
@@ -209,10 +201,9 @@ func Detect(configs []*nowhere2hide.C2_Config, runGUID string) {
 
 func addC2(c2s nowhere2hide.C2Results, runGUID string) {
 
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	connString := utils.GetConnectionString()
+	dbConn, err := sql.Open("postgres", connString)
 
-	// open database
-	dbConn, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		log.Info(fmt.Sprintf("Detect|%s|Error|Error connection DB-> %s", runGUID, err))
 		dbConn.Close()

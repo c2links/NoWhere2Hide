@@ -4,19 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"nowhere2hide"
+	"nowhere2hide/utils"
 	"os"
 	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
-)
-
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "nowhere2hide"
-	password = "nowhere2hide"
-	dbname   = "nowhere2hide"
 )
 
 var log = logrus.New()
@@ -92,11 +85,9 @@ func InitDB() bool {
 
 func create_token() error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
 	}
@@ -131,11 +122,9 @@ func create_token() error {
 
 func create_status() error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
 	}
@@ -179,11 +168,9 @@ func create_status() error {
 
 func create_c2() error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
 	}
@@ -227,11 +214,9 @@ func create_c2() error {
 
 func create_banner() error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
 	}
@@ -271,11 +256,9 @@ func create_banner() error {
 
 func create_http() error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
 	}
@@ -318,11 +301,9 @@ func create_http() error {
 
 func create_tls() error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
 	}
@@ -372,11 +353,9 @@ func create_tls() error {
 
 func create_jarm() error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
 	}
@@ -661,11 +640,9 @@ func Remove_HTTP_Duplicates(db *sql.DB) error {
 
 func AddStatus(job_status *nowhere2hide.Job_Status) error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
 	}
@@ -695,11 +672,9 @@ func AddStatus(job_status *nowhere2hide.Job_Status) error {
 
 func UpdateStatus(job_status *nowhere2hide.Job_Status) error {
 
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return err
 	}
@@ -740,11 +715,10 @@ func UpdateC2(db *sql.DB, c2_results nowhere2hide.C2Results) error {
 }
 
 func BannerQuery(query string) ([]nowhere2hide.DB_Banner, error) {
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
+
 	if err != nil {
 		defer db.Close()
 		return nil, err
@@ -785,11 +759,10 @@ func BannerQuery(query string) ([]nowhere2hide.DB_Banner, error) {
 }
 
 func TLSQuery(query string) ([]nowhere2hide.DB_TLS, error) {
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
+
 	if err != nil {
 		defer db.Close()
 		return nil, err
@@ -832,11 +805,10 @@ func TLSQuery(query string) ([]nowhere2hide.DB_TLS, error) {
 }
 
 func Query(table string, query string) ([]nowhere2hide.DB_Gen, error) {
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
 
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
+
 	if err != nil {
 		defer db.Close()
 		return nil, err
