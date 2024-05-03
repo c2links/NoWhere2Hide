@@ -24,7 +24,6 @@ type Scan_HTTP struct {
 	FailHTTPtoHTTPs bool
 	RetryHTTPS      bool
 	HTTPS           bool
-	MaxRedirects    int
 }
 
 type Scan_TLS struct {

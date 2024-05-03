@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"nowhere2hide"
@@ -12,6 +13,14 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "nowhere2hide"
+	password = "nowhere2hide"
+	dbname   = "nowhere2hide"
 )
 
 var log = logrus.New()
@@ -104,7 +113,7 @@ func Detect(configs []*nowhere2hide.C2_Config, runGUID string) {
 				return nil
 			})
 			if err != nil {
-				log.Info(fmt.Sprintf("Detect|%s|Error|%s", runGUID, err))
+				log.Info(fmt.Sprintf("Detect|%s|Error with detection modules|%s", runGUID, err))
 			}
 		}
 
@@ -113,7 +122,7 @@ func Detect(configs []*nowhere2hide.C2_Config, runGUID string) {
 				for _, q := range config.Detection.Queries {
 					results, err := db.Query(q.Table, q.Query)
 					if err != nil {
-						log.Info(fmt.Sprintf("Detect|%s|Error| %s", runGUID, err))
+						log.Info(fmt.Sprintf("Detect|%s|Error simple module db query| %s", runGUID, err))
 					}
 					for _, result := range results {
 
@@ -152,7 +161,7 @@ func Detect(configs []*nowhere2hide.C2_Config, runGUID string) {
 			for _, q := range config.Detection.Queries {
 				results, err := db.Query(q.Table, q.Query)
 				if err != nil {
-					log.Info(fmt.Sprintf("Detect|%s|Error| %s", runGUID, err))
+					log.Info(fmt.Sprintf("Detect|%s|Error simple all query db query| %s", runGUID, err))
 				}
 
 				for _, result := range results {
@@ -200,29 +209,50 @@ func Detect(configs []*nowhere2hide.C2_Config, runGUID string) {
 
 func addC2(c2s nowhere2hide.C2Results, runGUID string) {
 
-	exists, err := db.CheckC2Exists(c2s)
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
+
+	// open database
+	dbConn, err := sql.Open("postgres", psqlconn)
+	if err != nil {
+		log.Info(fmt.Sprintf("Detect|%s|Error|Error connection DB-> %s", runGUID, err))
+		dbConn.Close()
+	}
+
+	// close database
+	defer dbConn.Close()
+
+	// check db
+	err = dbConn.Ping()
+	if err != nil {
+		log.Info(fmt.Sprintf("Detect|%s|Error|Error ping DB-> %s", runGUID, err))
+		dbConn.Close()
+
+	}
+
+	exists, err := db.CheckC2Exists(dbConn, c2s)
 
 	if err != nil {
-		log.Info(fmt.Sprintf("Detect|%s|Error| %s", runGUID, err))
+		log.Info(fmt.Sprintf("Detect|%s|Error CheckExists| %s", runGUID, err))
 	}
 
 	if !exists {
-		err = db.AddC2(c2s)
+		err = db.AddC2(dbConn, c2s)
 
 		if err != nil {
-			log.Info(fmt.Sprintf("Detect|%s|Error| %s", runGUID, err))
+			log.Info(fmt.Sprintf("Detect|%s|Error Add C2| %s", runGUID, err))
 
 		} else {
 			log.Info(fmt.Sprintf("Detect|%s|Info|Added to C2 database: %+v", runGUID, c2s))
 		}
 
 	} else {
-		err = db.UpdateC2(c2s)
+		err = db.UpdateC2(dbConn, c2s)
 
 		if err != nil {
-			log.Info(fmt.Sprintf("Detect|%s|Error| %s", runGUID, err))
+			log.Info(fmt.Sprintf("Detect|%s|Error Update C2| %s", runGUID, err))
 		} else {
 			log.Info(fmt.Sprintf("Detect|%s|Info|Record already existed in C2 database: %+v", runGUID, c2s))
 		}
 	}
+	dbConn.Close()
 }

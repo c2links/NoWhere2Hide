@@ -135,7 +135,10 @@ func Run(configPaths []string) string {
 		}
 		if len(config_string) > 255 {
 			js.Configs = config_string[0:255]
+		} else {
+			js.Configs = config_string
 		}
+
 		err = db.UpdateStatus(&js)
 		if err != nil {
 			log.Info(fmt.Sprintf("Run|%s|Error|Error updating Status %s", runGUID, err))
@@ -223,6 +226,7 @@ func RunHuntCerts() string {
 	js.UID = runGUID.String()
 	js.Job_Started = t.Format("2006-01-02 15:04:05")
 	js.Config_Validated = true
+	js.Configs = "HUNTIO CERTS"
 	js.Targets_Acquired = true
 	js.Scan_Started = false
 	js.Scan_Finished = false
@@ -283,6 +287,7 @@ func RunRetro() string {
 	js.UID = runGUID.String()
 	js.Job_Started = t.Format("2006-01-02 15:04:05")
 	js.Config_Validated = false
+	js.Configs = "Retro C2s"
 	js.Targets_Acquired = false
 	js.Scan_Started = false
 	js.Scan_Finished = false

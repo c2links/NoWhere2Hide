@@ -141,11 +141,13 @@ Script functions to facilitate authentication and setting the jwt in session sto
 
   <label for="pg">Enter Postgres Query to Execute: </label>
   <input type="text" id="pg" placeholder="serial_number ilike '%found%" size=60>
-  <input type="submit" onclick="query()"><br><br>
-
-  <b>*** The prefix will always be 'select address,port, status,banner_text,banner_hex,length,timestamp from tls where
-    '</b><br>
-  <b>*** Enter just the where clause in the above box. For example, "serial_number ilike '%found%'"</b><br><br>
+  <input type="submit" onclick="query()"><br>
+  <b>***Example Searches**"</b><br><br>
+  <b>uid='70d6d4e9-00d0-4369-8f0a-d92576b095dc'</b><br>
+  <b>ja4x = '3737933bfaa2_3737933bfaa2_6ea8df877ef2'</b><br>
+  <b>serial_number = '17833032397048167864'</b><br>
+  <b>issuer_dn ilike '%RSA%'</b><br>
+  <b>subject_common_name ilike '%TRAEFIK DEFAULT CERT%'</b><br> 
 
   <script>
 

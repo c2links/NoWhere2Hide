@@ -411,25 +411,7 @@ func create_jarm() error {
 	return nil
 }
 
-func CheckC2Exists(c2_results nowhere2hide.C2Results) (bool, error) {
-
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
-
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
-	if err != nil {
-		return false, err
-	}
-
-	// close database
-	defer db.Close()
-
-	// check db
-	err = db.Ping()
-	if err != nil {
-		return false, err
-	}
+func CheckC2Exists(db *sql.DB, c2_results nowhere2hide.C2Results) (bool, error) {
 
 	//Check if record already exists
 
@@ -452,36 +434,15 @@ func CheckC2Exists(c2_results nowhere2hide.C2Results) (bool, error) {
 
 		record := address + port + rule_name + malware_family
 		if record == new_record {
-			db.Close()
 			return true, nil
 
 		}
 
 	}
-
-	db.Close()
 	return false, nil
 }
 
-func AddC2(c2_results nowhere2hide.C2Results) error {
-
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
-
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
-	if err != nil {
-		return err
-	}
-
-	// close database
-	defer db.Close()
-
-	// check db
-	err = db.Ping()
-	if err != nil {
-		return err
-	}
+func AddC2(db *sql.DB, c2_results nowhere2hide.C2Results) error {
 
 	insertDynStmt := `insert into "c2_results"("uid", "address", "port", "malware_family", "rule_name","description","classification","version","additional_details","first_seen", "last_seen")` +
 		`values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11)`
@@ -493,7 +454,6 @@ func AddC2(c2_results nowhere2hide.C2Results) error {
 	}
 	log.Info(fmt.Sprintf("DB|Info|%s", result))
 
-	defer db.Close()
 	return nil
 }
 
@@ -766,25 +726,7 @@ func UpdateStatus(job_status *nowhere2hide.Job_Status) error {
 	return nil
 }
 
-func UpdateC2(c2_results nowhere2hide.C2Results) error {
-
-	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname =%s sslmode=disable", host, port, user, password, dbname)
-
-	// open database
-	db, err := sql.Open("postgres", psqlconn)
-	if err != nil {
-		return err
-	}
-
-	// close database
-	defer db.Close()
-
-	// check db
-	err = db.Ping()
-	if err != nil {
-		return err
-	}
+func UpdateC2(db *sql.DB, c2_results nowhere2hide.C2Results) error {
 
 	insertDynStmt := `update "c2_results" set "last_seen" = $1 where "uid" = $2`
 
@@ -794,7 +736,6 @@ func UpdateC2(c2_results nowhere2hide.C2Results) error {
 	}
 	log.Info(fmt.Sprintf("DB|C2|Info|%s", results))
 
-	defer db.Close()
 	return nil
 }
 

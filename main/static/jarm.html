@@ -137,12 +137,12 @@ Script functions to facilitate authentication and setting the jwt in session sto
   -->
 
   <label for="pg">Enter Postgres Query to Execute: </label>
-  <input type="text" id="pg" placeholder="banner_text ilike '%found%'" size=60>
-  <input type="submit" onclick="query()"><br><br>
-  <b>*** The prefix will always be 'select address,port, status,banner_text,banner_hex,length,timestamp from banners
-    where '</b><br>
-  <b>*** Enter just the where clause in the above box. For example, "banner_text ilike '%found%'"</b><br><br>
-
+  <input type="text" id="pg" placeholder="fingerprint = '2ad2ad0000000000002ad2ad00000052da598353a58843bbe5b64e43d6d7a7'" size=60>
+  <input type="submit" onclick="query()"><br>
+  <b>***Example Searches**"</b><br>
+  <b>uid='70d6d4e9-00d0-4369-8f0a-d92576b095dc'</b><br>
+  <b>fingerprint = '2ad2ad0000000000002ad2ad00000052da598353a58843bbe5b64e43d6d7a7'</b><br>
+  
   <script>
 
     var limit = 100;

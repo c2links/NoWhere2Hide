@@ -139,10 +139,12 @@ Script functions to facilitate authentication and setting the jwt in session sto
 
   <label for="pg">Enter Postgres Query to Execute: </label>
   <input type="text" id="pg" placeholder="banner_text ilike '%found%'" size=60>
-  <input type="submit" onclick="query()"><br><br>
-  <b>*** The prefix will always be 'select address,port, status,banner_text,banner_hex,length,timestamp from banners
-    where '</b><br>
-  <b>*** Enter just the where clause in the above box. For example, "banner_text ilike '%found%'"</b><br><br>
+  <input type="submit" onclick="query()"><br>
+  <b>***Example Searches**"</b><br><br>
+  <b>uid='70d6d4e9-00d0-4369-8f0a-d92576b095dc'</b><br>
+  <b>banner_hex = '98ff312c2a'</b><br>
+  <b>banner_text ilike '%teststring%'</b><br>
+  <b>banner_text ilike '%teststring%' AND banner_length > 500</b><br>
 
   <script>
 
@@ -178,12 +180,12 @@ Script functions to facilitate authentication and setting the jwt in session sto
   <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button
     onclick="nextPage()">Next</button>
   <table class="PTABLE" style="width: 100%;">
-    <th style="width:15%">Address</th>
-    <th style="width:5%">Port</th>
-    <th style="width:15%">Status</th>
-    <th style="width:30%">Banner Text</th>
-    <th style="width:30%">Banner Hex</th>
-    <th style="width:5%">Banner Length</th>
+    <th style="width:15%">address</th>
+    <th style="width:5%">port</th>
+    <th style="width:15%">status</th>
+    <th style="width:30%">banner_text</th>
+    <th style="width:30%">banner_hex</th>
+    <th style="width:5%">banner_length</th>
     </tr>
   </table>
   <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button

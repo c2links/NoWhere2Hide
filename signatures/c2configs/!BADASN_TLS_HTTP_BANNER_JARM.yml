@@ -1,0 +1,48 @@
+rule_name: BADASN_TLS_HTTP_BANNER_JARM
+guid: eebbf69b-d3d6-4d5c-b524-0eb13c01d60c
+family: BADASN
+version: ""
+description: This signature performs Banner, TLS, JARM and HTTP scans using the BadASN
+  dataset. There is no detection logic applied, this scan is to populate the the scan
+  data tables (http, tls, banner and jarm)
+classification: Other
+references:
+- ""
+created: "2024-04-18 23:38:07"
+targets:
+- source: shodan
+  targetquery: []
+- source: censys
+  targetquery: []
+- source: badasn
+  targetquery:
+  - enabled
+- source: newdomain
+  targetquery: []
+- source: tdomain
+  targetquery: []
+- source: ipsum
+  targetquery: []
+scan_banner:
+  enabled: true
+  probefile: ""
+scan_http:
+  enabled: true
+  method: GET
+  endpoint: /
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: false
+  retryhttps: false
+  https: true
+scan_tls:
+  enabled: true
+scan_jarm:
+  enabled: true
+detection:
+  module: false
+  module_name: ""
+  simple: false
+  condition: all
+  queries: []

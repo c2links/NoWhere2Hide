@@ -1,0 +1,49 @@
+rule_name: IPLIST_RULE_DEVELOPMENT
+guid: b77e7ea1-4111-4e7e-b83f-d796c8f59913
+family: Undefined
+version: ""
+description: Use this rule to scan a block of IP's for rule development. All scanning
+  modules are enabled.
+classification: Other
+references:
+- ""
+created: "2024-05-02 16:00:35"
+targets:
+- source: shodan
+  targetquery: []
+- source: censys
+  targetquery: []
+- source: badasn
+  targetquery: []
+- source: newdomain
+  targetquery: []
+- source: tdomain
+  targetquery: []
+- source: ipsum
+  targetquery: []
+- source: iplist
+  targetquery:
+  - 192.168.201.130:8888
+scan_banner:
+  enabled: true
+  probefile: ""
+scan_http:
+  enabled: true
+  method: GET
+  endpoint: /
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: true
+  retryhttps: false
+  https: false
+scan_tls:
+  enabled: true
+scan_jarm:
+  enabled: true
+detection:
+  module: false
+  module_name: ""
+  simple: false
+  condition: all
+  queries: []
