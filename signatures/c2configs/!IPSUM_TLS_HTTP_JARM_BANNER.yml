@@ -1,4 +1,4 @@
-rule_name: IPSUM_TLS_HTTP_JARM_BANNER
+rule_name: !IPSUM_TLS_HTTP_JARM_BANNER
 guid: b96ca534-ad22-4424-967d-52b36490a0f4
 family: IPSUM
 version: ""
