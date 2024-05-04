@@ -1,4 +1,4 @@
-rule_name: !BADASN_TLS_HTTP_BANNER_JARM
+rule_name: '!BADASN_TLS_HTTP_BANNER_JARM'
 guid: eebbf69b-d3d6-4d5c-b524-0eb13c01d60c
 family: BADASN
 version: ""
