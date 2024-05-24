@@ -1,0 +1,99 @@
+ {{define "editsig"}}
+ <script>
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+
+    const edited = true;
+
+    fetch("/GetSig", { method: "POST", body: urlParams })
+      .then(response => response.json())
+      .then(config => {
+        var form = document.getElementById("newSig");
+
+        var name = form.elements["Rule_Name"];
+        name.value = config.Rule_Name;
+        name.readOnly = true;
+
+        var name = form.elements["Malware_Family"];
+        name.value = config.Family;
+
+        var name = form.elements["classification"];
+        name.value = config.Classification;
+
+        var name = form.elements["Description"];
+        name.value = config.Description;
+
+        var name = form.elements["References"];
+        name.value = config.References;
+        
+        var name = form.elements["Created_Date"];
+        name.value = config.Created;
+
+        var name = form.elements["Edit_Date"];
+        name.value = config.Last_Edit;
+
+
+        targets = config.Targets;
+        for (var target of targets) {
+          var source = target.Source;
+          for (var query of target.TargetQuery) {
+            addTarget(source, query);
+          }
+
+        }
+
+        if (config.Scan_Banner.Enabled) {
+          addBanner(config.Scan_Banner.Probefile);
+        }
+
+        if (config.Scan_HTTP.Enabled) {
+
+          if (config.Scan_HTTP.HTTPS) {
+            var httpsValue = "Yes";
+
+          } else {
+            var httpsValue = "No";
+          }
+
+          var headerString = "";
+          if (config.Scan_HTTP.Custom_Headers.length > 0) {
+            for (var header of config.Scan_HTTP.Custom_Headers) {
+              headerString = headerString + header.Field + ":" + header.Value + "\n"
+            }
+
+          }
+
+          addHTTP(config.Scan_HTTP.Method, config.Scan_HTTP.Endpoint, config.Scan_HTTP.Useragent, config.Scan_HTTP.Body, headerString, httpsValue)
+        }
+
+        if (config.Scan_TLS.Enabled) {
+          addTLS();
+        }
+
+        if (config.Scan_JARM.Enabled) {
+          addJARM();
+        }
+
+        if (config.Detection.Simple) {
+          var form = document.getElementById("newSig");
+          var name = form.elements["condition"];
+          name.value = config.Detection.Condition;
+
+          for (var query of config.Detection.Queries) {
+            addQuery(query.Table, query.Query);
+          }
+        }
+
+        if (config.Detection.Module) {
+          config.Detection.Module_name.forEach(function(name){
+            addCustom(name);
+          });
+        }
+
+      })
+
+  </script>
+
+  {{template "newsig".}}
+
+{{end}}

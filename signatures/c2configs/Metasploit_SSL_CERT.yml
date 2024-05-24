@@ -1,5 +1,5 @@
 rule_name: Metasploit_SSL_CERT
-guid: e39b4604-c60d-4a30-9dd3-4b121f940398
+guid: f0048cf1-279d-4d84-96e6-377f79602f1d
 family: Metasploit
 version: ""
 description: Checks SSL Cert used for Metasploit
@@ -9,22 +9,15 @@ references:
   https://github.com/lothos612/shodan/blob/main/README.md
   https://github.com/thehappydinoa/awesome-censys-queries#advanced-queries
 created: "2024-04-18 23:34:56"
+last_edit: "2024-05-24 14:55:48"
 targets:
-- source: shodan
-  targetquery:
-  - ssl:"MetasploitSelfSignedCA"
 - source: censys
   targetquery:
   - 'services.http.response.html_title: "Metasploit" and (services.tls.certificates.leaf_data.subject.organization:
     "Rapid7" or services.tls.certificates.leaf_data.subject.common_name: "MetasploitSelfSignedCA")'
-- source: badasn
-  targetquery: []
-- source: newdomain
-  targetquery: []
-- source: tdomain
-  targetquery: []
-- source: ipsum
-  targetquery: []
+- source: shodan
+  targetquery:
+  - ssl:"MetasploitSelfSignedCA"
 scan_banner:
   enabled: false
   probefile: ""
@@ -44,7 +37,7 @@ scan_jarm:
   enabled: false
 detection:
   module: false
-  module_name: ""
+  module_name: []
   simple: true
   condition: any
   queries:

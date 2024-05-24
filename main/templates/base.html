@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>NoWhere2Hide</title>
+    </head>
+<body>
+    {{template "header" .}}
+    {{template "nav" .}}
+    {{template "forms" .}}
+    <main>
+        {{template "login" .}}
+        {{if .index}}
+        {{template "index" .}}
+        {{end}}
+        {{if .c2}}
+        {{template "c2" .}}
+        {{end}}
+        {{if .runscan}}
+        {{template "runscan" .}}
+        {{end}}
+        {{if .query}}
+        {{template "query" .}}
+        {{end}}
+        {{if .status}}
+        {{template "status" .}}
+        {{end}}
+        {{if .queryuid}}
+        {{template "queryuid" .}}
+        {{end}}
+        {{if .readme}}
+        {{template "readme" .}}
+        {{end}}
+        {{if .utilities}}
+        {{template "utilities" .}}
+        {{end}}
+        {{if .cleardb}}
+        {{template "cleardb" .}}
+        {{end}}
+        {{if .newsig}}
+        {{template "newsig" .}}
+        {{end}}
+        {{if .viewsigs}}
+        {{template "viewsigs" .}}
+        {{end}}
+        {{if .editsig}}
+        {{template "editsig" .}}
+        {{end}}
+        
+    </main>
+</body>
+</html>

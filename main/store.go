@@ -9,17 +9,9 @@ import (
 type Store interface {
 	GetC2() ([]*C2_Record, error)
 	GetC2Query(query string) ([]*C2_Record, error)
-	GetBanner(limit string, offset string) ([]*Banner_Record, error)
-	GetBannerQuery(query string, limit string, offset string) ([]*Banner_Record, error)
-	GetJarm(limit string, offset string) ([]*Jarm_Record, error)
-	GetJarmQuery(query string, limit string, offset string) ([]*Jarm_Record, error)
-	GetHTTP(limit string, offset string) ([]*HTTP_Record, error)
-	GetHTTPQuery(query string, limit string, offset string) ([]*HTTP_Record, error)
-	GetTLS(limit string, offset string) ([]*TLS_Record, error)
-	GetTLSQuery(query string, limit string, offset string) ([]*TLS_Record, error)
+	ExecuteQuery(query string, limit string, offset string) (QueryResult, error)
 	GetJobs() ([]*Job_Status, error)
-	GetRecordCount(table string) (int, error)
-	GetRecordCountQ(table string, query string) (int, error)
+	GetRecordCountQ(query string) (int, error)
 	GetC2List() ([]*C2_Count, error)
 	deleteContents(string) error
 	CheckTokenExists(inputToken string) (error, bool)
@@ -133,7 +125,7 @@ func (store *dbStore) CheckTokenExists(inputToken string) (error, bool) {
 
 func (store *dbStore) GetC2() ([]*C2_Record, error) {
 
-	rows, err := store.db.Query("SELECT address, port, malware_family FROM c2_results")
+	rows, err := store.db.Query("SELECT address, port, malware_family, rule_name, first_seen, last_seen FROM c2_results")
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +134,7 @@ func (store *dbStore) GetC2() ([]*C2_Record, error) {
 	c2List := []*C2_Record{}
 	for rows.Next() {
 		c2 := &C2_Record{}
-		if err := rows.Scan(&c2.IP, &c2.Port, &c2.Malware_Family); err != nil {
+		if err := rows.Scan(&c2.IP, &c2.Port, &c2.Malware_Family, &c2.Rule_Name, &c2.First_Seen, &c2.Last_Seen); err != nil {
 			return nil, err
 		}
 		c2List = append(c2List, c2)
@@ -169,7 +161,7 @@ func (store *dbStore) GetC2List() ([]*C2_Count, error) {
 	return c2List, nil
 }
 
-func (store *dbStore) GetRecordCount(table string) (int, error) {
+func (store *dbStore) GetRecordCountQ(query string) (int, error) {
 
 	type CountRecord struct {
 		Count int
@@ -177,30 +169,7 @@ func (store *dbStore) GetRecordCount(table string) (int, error) {
 
 	var count CountRecord
 
-	rows, err := store.db.Query(fmt.Sprintf("SELECT count(id) FROM %s", table))
-
-	if err != nil {
-		return 0, err
-	}
-	for rows.Next() {
-		if err := rows.Scan(&count.Count); err != nil {
-			return 0, err
-		}
-
-	}
-
-	return count.Count, nil
-}
-
-func (store *dbStore) GetRecordCountQ(table string, query string) (int, error) {
-
-	type CountRecord struct {
-		Count int
-	}
-
-	var count CountRecord
-
-	rows, err := store.db.Query(fmt.Sprintf("SELECT count(id) FROM %s WHERE %s", table, query))
+	rows, err := store.db.Query(fmt.Sprintf("SELECT count(*) FROM (%s) AS subquery", query))
 
 	if err != nil {
 		return 0, err
@@ -217,7 +186,7 @@ func (store *dbStore) GetRecordCountQ(table string, query string) (int, error) {
 
 func (store *dbStore) GetC2Query(query string) ([]*C2_Record, error) {
 
-	rows, err := store.db.Query(fmt.Sprintf("SELECT address, port, malware_family FROM c2_results where malware_family ilike '%%%s%%'", query))
+	rows, err := store.db.Query(fmt.Sprintf("SELECT address, port, malware_family, rule_name, first_seen, last_seen FROM c2_results where malware_family ilike '%%%s%%' ORDER BY last_seen DESC ", query))
 
 	if err != nil {
 		return nil, err
@@ -227,7 +196,7 @@ func (store *dbStore) GetC2Query(query string) ([]*C2_Record, error) {
 	c2List := []*C2_Record{}
 	for rows.Next() {
 		c2 := &C2_Record{}
-		if err := rows.Scan(&c2.IP, &c2.Port, &c2.Malware_Family); err != nil {
+		if err := rows.Scan(&c2.IP, &c2.Port, &c2.Malware_Family, &c2.Rule_Name, &c2.First_Seen, &c2.Last_Seen); err != nil {
 			return nil, err
 		}
 		c2List = append(c2List, c2)
@@ -235,174 +204,39 @@ func (store *dbStore) GetC2Query(query string) ([]*C2_Record, error) {
 	return c2List, nil
 }
 
-func (store *dbStore) GetBanner(limit string, offset string) ([]*Banner_Record, error) {
+func (store *dbStore) ExecuteQuery(query string, limit string, offset string) (QueryResult, error) {
 
-	rows, err := store.db.Query(fmt.Sprintf("SELECT address, port, status, banner_text, banner_hex, banner_length, timestamp FROM banner ORDER BY address LIMIT %s OFFSET %s", limit, offset))
+	var results QueryResult
+	rows, err := store.db.Query(fmt.Sprintf("%s ORDER BY timestamp DESC LIMIT %s OFFSET %s", query, limit, offset))
+
 	if err != nil {
-		return nil, err
+		return results, err
 	}
 	defer rows.Close()
 
-	bannerList := []*Banner_Record{}
-	for rows.Next() {
-		banner := &Banner_Record{}
-		if err := rows.Scan(&banner.Address, &banner.Port, &banner.Status, &banner.Banner_Text, &banner.Banner_Hex, &banner.Banner_Length, &banner.Timestamp); err != nil {
-			return nil, err
-		}
-		bannerList = append(bannerList, banner)
-	}
-	return bannerList, nil
-}
-
-func (store *dbStore) GetTLS(limit string, offset string) ([]*TLS_Record, error) {
-
-	rows, err := store.db.Query(fmt.Sprintf("SELECT address,port,status,version ,serial_number,issuer_common_name,"+
-		"issuer_country, issuer_organization,issuer_dn,subject_common_name,subject_country,subject_organization,subject_dn,fingerprint_sha1, ja4x, timestamp  FROM tls "+
-		"ORDER BY address LIMIT %s OFFSET %s", limit, offset))
+	columns, err := rows.Columns()
 
 	if err != nil {
-		return nil, err
+		return results, err
 	}
-	defer rows.Close()
 
-	tlsList := []*TLS_Record{}
+	results.Columns = columns
+
 	for rows.Next() {
-		tls := &TLS_Record{}
-		if err := rows.Scan(&tls.Address, &tls.Port, &tls.Status, &tls.Version, &tls.Serial_Number, &tls.Issuer_Common_Name, &tls.Issuer_Country, &tls.Issuer_Organization, &tls.Issuer_DN,
-			&tls.Subject_Common_Name, &tls.Subject_Country, &tls.Subject_Organization, &tls.Subject_DN, &tls.Fingerprint_SHA1, &tls.JA4X, &tls.Timestamp); err != nil {
-			return nil, err
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+
+		for i := range values {
+			valuePtrs[i] = &values[i]
 		}
-		tlsList = append(tlsList, tls)
-	}
-	return tlsList, nil
-}
 
-func (store *dbStore) GetJarm(limit string, offset string) ([]*Jarm_Record, error) {
-
-	rows, err := store.db.Query(fmt.Sprintf("SELECT address,port,status,fingerprint,timestamp FROM jarm "+
-		"ORDER BY address LIMIT %s OFFSET %s", limit, offset))
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	jarmList := []*Jarm_Record{}
-	for rows.Next() {
-		jarm := &Jarm_Record{}
-		if err := rows.Scan(&jarm.Address, &jarm.Port, &jarm.Status, &jarm.Fingerprint, &jarm.Timestamp); err != nil {
-			return nil, err
+		if err := rows.Scan(valuePtrs...); err != nil {
+			return results, err
 		}
-		jarmList = append(jarmList, jarm)
+
+		results.Rows = append(results.Rows, values)
 	}
-	return jarmList, nil
-}
-
-func (store *dbStore) GetHTTP(limit string, offset string) ([]*HTTP_Record, error) {
-
-	rows, err := store.db.Query(fmt.Sprintf("SELECT address,port,status, status_line,status_code,headers,body,body_sha256, timestamp FROM http "+
-		"ORDER BY address LIMIT %s OFFSET %s", limit, offset))
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	httpList := []*HTTP_Record{}
-	for rows.Next() {
-		http := &HTTP_Record{}
-		if err := rows.Scan(&http.Address, &http.Port, &http.Status, &http.Status_Line, &http.Status_Code, &http.Headers, &http.Body, &http.Body_SHA256, &http.Timestamp); err != nil {
-			return nil, err
-		}
-		httpList = append(httpList, http)
-	}
-	return httpList, nil
-}
-
-func (store *dbStore) GetBannerQuery(query string, limit string, offset string) ([]*Banner_Record, error) {
-
-	rows, err := store.db.Query(fmt.Sprintf("SELECT address, port, status, banner_text, banner_hex, banner_length, timestamp FROM banner WHERE %s ORDER BY address LIMIT %s OFFSET %s", query, limit, offset))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	bannerList := []*Banner_Record{}
-	for rows.Next() {
-		banner := &Banner_Record{}
-		if err := rows.Scan(&banner.Address, &banner.Port, &banner.Status, &banner.Banner_Text, &banner.Banner_Hex, &banner.Banner_Length, &banner.Timestamp); err != nil {
-			return nil, err
-		}
-		bannerList = append(bannerList, banner)
-	}
-
-	return bannerList, nil
-}
-
-func (store *dbStore) GetTLSQuery(query string, limit string, offset string) ([]*TLS_Record, error) {
-
-	rows, err := store.db.Query(fmt.Sprintf("SELECT address,port,status,version ,serial_number,"+
-		"issuer_common_name, issuer_country, issuer_organization,issuer_dn,"+
-		"subject_common_name,subject_country,subject_organization,subject_dn,fingerprint_sha1, ja4x, timestamp  FROM tls WHERE %s "+
-		"ORDER BY address LIMIT %s OFFSET %s", query, limit, offset))
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	tlsList := []*TLS_Record{}
-	for rows.Next() {
-		tls := &TLS_Record{}
-		if err := rows.Scan(&tls.Address, &tls.Port, &tls.Status, &tls.Version, &tls.Serial_Number, &tls.Issuer_Common_Name, &tls.Issuer_Country, &tls.Issuer_Organization, &tls.Issuer_DN,
-			&tls.Subject_Common_Name, &tls.Subject_Country, &tls.Subject_Organization, &tls.Subject_DN, &tls.Fingerprint_SHA1, &tls.JA4X, &tls.Timestamp); err != nil {
-			return nil, err
-		}
-		tlsList = append(tlsList, tls)
-	}
-	return tlsList, nil
-}
-
-func (store *dbStore) GetJarmQuery(query string, limit string, offset string) ([]*Jarm_Record, error) {
-
-	rows, err := store.db.Query(fmt.Sprintf("SELECT address,port,status,fingerprint,timestamp FROM jarm WHERE %s "+
-		"ORDER BY address LIMIT %s OFFSET %s", query, limit, offset))
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	jarmList := []*Jarm_Record{}
-	for rows.Next() {
-		jarm := &Jarm_Record{}
-		if err := rows.Scan(&jarm.Address, &jarm.Port, &jarm.Status, &jarm.Fingerprint, &jarm.Timestamp); err != nil {
-			return nil, err
-		}
-		jarmList = append(jarmList, jarm)
-	}
-	return jarmList, nil
-}
-
-func (store *dbStore) GetHTTPQuery(query string, limit string, offset string) ([]*HTTP_Record, error) {
-
-	rows, err := store.db.Query(fmt.Sprintf("SELECT address,port,status, status_line,status_code,headers,body,body_sha256, timestamp FROM http WHERE %s "+
-		"ORDER BY address LIMIT %s OFFSET %s", query, limit, offset))
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	httpList := []*HTTP_Record{}
-	for rows.Next() {
-		http := &HTTP_Record{}
-		if err := rows.Scan(&http.Address, &http.Port, &http.Status, &http.Status_Line, &http.Status_Code, &http.Headers, &http.Body, &http.Body_SHA256, &http.Timestamp); err != nil {
-			return nil, err
-		}
-		httpList = append(httpList, http)
-	}
-	return httpList, nil
+	return results, nil
 }
 
 func (store *dbStore) GetJobs() ([]*Job_Status, error) {

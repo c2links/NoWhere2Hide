@@ -1,5 +1,5 @@
 rule_name: '!IPLIST_RULE_DEVELOPMENT'
-guid: b77e7ea1-4111-4e7e-b83f-d796c8f59913
+guid: 4ada83ae-63b5-434d-a8fb-9884ae13d2a5
 family: Undefined
 version: ""
 description: Use this rule to scan a block of IP's for rule development. All scanning
@@ -8,19 +8,8 @@ classification: Other
 references:
 - ""
 created: "2024-05-02 16:00:35"
+last_edit: "2024-05-24 14:56:24"
 targets:
-- source: shodan
-  targetquery: []
-- source: censys
-  targetquery: []
-- source: badasn
-  targetquery: []
-- source: newdomain
-  targetquery: []
-- source: tdomain
-  targetquery: []
-- source: ipsum
-  targetquery: []
 - source: iplist
   targetquery:
   - 192.168.201.130:8888
@@ -34,8 +23,8 @@ scan_http:
   useragent: ""
   body: ""
   custom_headers: []
-  failhttptohttps: true
-  retryhttps: false
+  failhttptohttps: false
+  retryhttps: true
   https: false
 scan_tls:
   enabled: true
@@ -43,7 +32,7 @@ scan_jarm:
   enabled: true
 detection:
   module: false
-  module_name: ""
+  module_name: []
   simple: false
   condition: all
   queries: []

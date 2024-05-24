@@ -1,0 +1,55 @@
+{{define "forms"}} 
+<div id="loginForm" class="login-popup-form">
+    <h2>Enter Token</h2>
+    <form>
+      <div>
+        <label for="token">API Token:</label>
+        <input type="text" size=50 id="jwt_token" name="jwt_token" required>
+      </div>
+      <br>
+      <button onclick="auth()">Submit</button>
+    </form>
+    <button onclick="closePopup('auth')">Close</button>
+  </div>
+  
+  <div id="failForm" class="message-popup-form">
+    <h2>Invalid token</h2>
+    <button onclick="closePopup('fail')">Close</button>
+  </div>
+  
+  <div id="loadedSuccessForm" class="message-popup-form">
+    <h2>Retro hunt finished successfully</h2>
+    <button onclick="closePopup('loadedSuccess')">Close</button>
+  </div>
+  
+  <div id="loadedFailForm" class="message-popup-form">
+    <h2>Retro hunt failed. Possible bad token? Check logs.</h2>
+    <button onclick="closePopup('loadedFail')">Close</button>
+  </div>
+
+  <div id="runsuccessForm" class="message-popup-form">
+    <h3>Run started successfully, check status on Job Status page</h3>
+    <button onclick="closePopup('runsuccess')">Close</button>
+  </div>
+
+  <div id="createdsuccessForm" class="message-popup-form">
+    <h3>Signature created / edited successfully!</h3>
+    <button onclick="closePopup('createdsuccess')">Close</button>
+  </div>
+
+  <div id="createdfailForm" class="message-popup-form">
+    <h3>Error creating / editing signature, check token, or logs</h3>
+    <button onclick="closePopup('createdfail')">Close</button>
+  </div>
+
+  <div id="successForm" class="message-popup-form">
+    <h3>Database cleared successfully</h3>
+    <button onclick="closePopup('success')">Close</button>
+  </div>
+
+  <div id="unauthForm" class="message-popup-form">
+    <h3>Not authorized (sign-in)</h3>
+    <button onclick="closePopup('unauth')">Close</button>
+  </div>
+  
+{{end}} 

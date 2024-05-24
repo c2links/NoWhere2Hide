@@ -1,5 +1,5 @@
 rule_name: Warzone_Default_Banner
-guid: fbfe1a34-c69c-4de0-b72e-ddbb9bee52e3
+guid: 5d8bae89-828d-40b6-b695-861a5368f7e1
 family: Warzone
 version: ""
 description: Checks default banner of Warzone
@@ -7,21 +7,14 @@ classification: Select an option
 references:
 - C2Links Research
 created: "2024-04-18 23:36:17"
+last_edit: "2024-05-24 15:04:44"
 targets:
-- source: shodan
-  targetquery: []
-- source: censys
-  targetquery: []
 - source: badasn
   targetquery:
-  - enabled
-- source: newdomain
-  targetquery: []
-- source: tdomain
-  targetquery: []
+  - ""
 - source: ipsum
   targetquery:
-  - enabled
+  - ""
 scan_banner:
   enabled: true
   probefile: ""
@@ -41,7 +34,7 @@ scan_jarm:
   enabled: false
 detection:
   module: false
-  module_name: ""
+  module_name: []
   simple: true
   condition: any
   queries:

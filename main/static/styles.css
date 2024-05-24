@@ -1,10 +1,28 @@
 .banner {
   /* The image used */
-  height: 400px;
+  height: 300px;
+  width: 100%;
   background-size: 100% 100%;
   background-repeat: no-repeat;
-  background-image: url(/banner.png);
+  
 }
+
+.query-input {
+  width: 200px; /* Adjust the width as needed */
+  height: 200px;
+}
+
+.tables-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.table-section {
+  flex: 1;
+  min-width: 300px; /* Adjust the min-width as needed */
+}
+
 
 input[type=checkbox] {
   width: 20px;
@@ -20,7 +38,7 @@ input[type=checkbox] {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: #5e5ce4;
+  background-color: #000000;
   color: #fff;
   padding: 20px;
   border: 1px solid #ccc;
@@ -34,7 +52,7 @@ input[type=checkbox] {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: #5e5ce4;
+  background-color: #000000;
   color: #fff;
   padding: 20px;
   border: 1px solid #ccc;
@@ -45,7 +63,7 @@ input[type=checkbox] {
 .popup {
   width: 400px;
   height: 300px;
-  background-color: #5e5ce4;
+  background-color: #000000;
   color: #fff;
   border: 1px solid #ccc;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
@@ -81,7 +99,7 @@ p {
 
 input[type=submit] {
   width: 20%;
-  background-color: #4CAF50;
+  background-color: #000000;
   color: white;
   padding: 14px 20px;
   margin: 8px 0;
@@ -92,7 +110,7 @@ input[type=submit] {
 }
 
 input[type=submit]:hover {
-  background-color: #45a049;
+  background-color: #6f746f;
 }
 
 label {
@@ -105,7 +123,7 @@ label {
 /* Add a black background color to the top navigation */
 
 .topnav {
-  background-color: #333;
+  background-color: #000000;
   overflow: hidden;
 }
 
@@ -164,7 +182,7 @@ table.PTABLE th {
   padding-top: 12px;
   padding-bottom: 12px;
   text-align: left;
-  background-color: #0a0852;
+  background-color: #000000;
   color: white;
 }
 
@@ -192,13 +210,24 @@ textarea {
 
 button {
   font-size: 18px;
-  background-color: #4CAF50;
+  background-color: #000000;
   color: white;
+  display: inline-block;
+}
+
+.target_button {
+  font-size: 18px;
+  background-color: #000000;
+  color: white;
+  display: block;
 }
 
 select {
   font-size: 18px;
+
+
 }
+
 
 .customButton {
   display: inline-block;

@@ -1,0 +1,32 @@
+{{define "cleardb"}}
+  <h1>Clear Databases</h1>
+  <!-- 
+    Specify the table that will be used to display the people database
+  -->
+  <input type="submit" name="c2" value="Click to clear C2 database" onclick="clearDB('c2_results')">
+  <input type="submit" name="http" value="Click to clear HTTP database" onclick="clearDB('http')">
+  <input type="submit" name="banner" value="Click to clear Banner database" onclick="clearDB('banner')">
+  <input type="submit" name="tls" value="Click to clear TLS database" onclick="clearDB('tls')">
+  <input type="submit" name="jarm" value="Click to clear JARM database" onclick="clearDB('jarm')">
+  <input type="submit" name="status" value="Click to clear Status database" onclick="clearDB('status')">
+
+  <script>
+
+    var popup;
+
+    async function clearDB(table_name) {
+      event.preventDefault(); // Prevent default form submission
+      try {
+        const response = await fetch("/ClearDB", { method: "POST", body: new URLSearchParams({ "c2-auth": sessionStorage.getItem('jwtKey'), 'table': table_name }) })
+        const data = await response.text()
+
+        if (response.status == 401) { togglePopup('unauth') }
+
+        if (data == "Successful") { togglePopup('success') }
+
+      } catch (error) { console.log(error) }
+    }
+  
+
+  </script>
+{{end}}

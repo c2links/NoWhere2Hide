@@ -1,0 +1,97 @@
+{{define "status"}}
+  <h2>Job Status</h2>
+  <div id="status">
+    
+  </div>
+
+  <script>
+
+     getStatus()
+  
+    async function getStatus() {
+
+      var container = document.getElementById("status");
+
+      // Create a table element
+      var table = document.createElement("table");
+      table.className = "PTABLE";
+      table.style.width = "100%";
+
+      // Create table header row
+      var headerRow = table.insertRow();
+      var headers = [
+        "uid",
+        "configs",
+        "job_started",
+        "config_validated",
+        "targets_acquired",
+        "scan_started",
+        "scan_finished",
+        "detection_started",
+        "detection_finished",
+        "job_completed",
+        "errors"
+      ];
+      headers.forEach(headerText => {
+        var th = document.createElement("th");
+        th.textContent = headerText;
+        th.style.width = "10%";
+        headerRow.appendChild(th);
+      });
+
+      // Append the table to the container div
+      container.appendChild(table);
+
+      statusTable = document.querySelector("table")
+
+      for (var i = 1; i < statusTable.rows.length;) {
+        statusTable.deleteRow(i);
+      }
+      const response = await fetch("/Jobs", { method: "GET" })
+      const data = await response.json() // Read the JSON body of the response
+      data.forEach(status => {
+        // Create the table row
+        row = document.createElement("tr")
+        uid = document.createElement("td")
+        uid.innerHTML = '<a href="/queryuid?uid='+ status.UID + '">' + status.UID + '</a>';
+        configs = document.createElement("td")
+        configs.innerHTML = status.Configs
+        job_started = document.createElement("td")
+        job_started.innerHTML = status.Job_Started
+        config = document.createElement("td")
+        config.innerHTML = status.Config_Validated
+        targets = document.createElement("td")
+        targets.innerHTML = status.Targets_Acquired
+        scan_started = document.createElement("td")
+        scan_started.innerHTML = status.Scan_Started
+        scan_finished = document.createElement("td")
+        scan_finished.innerHTML = status.Scan_Finished
+        detection_started = document.createElement("td")
+        detection_started.innerHTML = status.Detection_Started
+        detection_finished = document.createElement("td")
+        detection_finished.innerHTML = status.Detection_Finished
+        job_completed = document.createElement("td")
+        job_completed.innerHTML = status.Job_Completed
+        errors = document.createElement("td")
+        errors.innerHTML = status.Errors
+
+
+        // Add the data elements to the row
+        row.appendChild(uid)
+        row.appendChild(configs)
+        row.appendChild(job_started)
+        row.appendChild(config)
+        row.appendChild(targets)
+        row.appendChild(scan_started)
+        row.appendChild(scan_finished)
+        row.appendChild(detection_started)
+        row.appendChild(detection_finished)
+        row.appendChild(job_completed)
+        row.appendChild(errors)
+        // Add the row element to the table
+        statusTable.appendChild(row)
+      })
+    }
+
+  </script>
+{{end}}

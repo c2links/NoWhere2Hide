@@ -46,7 +46,7 @@ type Detection_Query struct {
 
 type Detection struct {
 	Module      bool
-	Module_name string
+	Module_name []string
 	Simple      bool
 	Condition   string
 	Queries     []Detection_Query
@@ -61,6 +61,7 @@ type C2_Config struct {
 	Classification string
 	References     []string
 	Created        string
+	Last_Edit      string
 	Targets        []C2_Target
 	Scan_Banner    Scan_Banner
 	Scan_HTTP      Scan_HTTP

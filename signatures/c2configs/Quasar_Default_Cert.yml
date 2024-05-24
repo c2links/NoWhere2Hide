@@ -1,5 +1,5 @@
 rule_name: Quasar_Default_Cert
-guid: d0fcfeea-4659-41fa-b193-e0eb144e2f91
+guid: 52e16f8f-9790-4ac5-8a2a-deb72185f123
 family: Quasar RAT
 version: ""
 description: Detects the default common name for Quasar RAT
@@ -7,21 +7,14 @@ classification: RAT
 references:
 - https://embee-research.ghost.io/shodan-censys-queries/
 created: "2024-04-18 23:35:20"
+last_edit: "2024-05-24 14:58:25"
 targets:
-- source: shodan
-  targetquery:
-  - ssl.cert.subject.cn:"Quasar Server CA"
 - source: censys
   targetquery:
   - 'services.tls.certificates.leaf_data.subject.common_name: "Quasar Server CA"'
-- source: badasn
-  targetquery: []
-- source: newdomain
-  targetquery: []
-- source: tdomain
-  targetquery: []
-- source: ipsum
-  targetquery: []
+- source: shodan
+  targetquery:
+  - ssl.cert.subject.cn:"Quasar Server CA"
 scan_banner:
   enabled: false
   probefile: ""
@@ -41,7 +34,7 @@ scan_jarm:
   enabled: false
 detection:
   module: false
-  module_name: ""
+  module_name: []
   simple: true
   condition: all
   queries:

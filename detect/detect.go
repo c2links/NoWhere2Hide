@@ -52,53 +52,56 @@ func Detect(configs []*nowhere2hide.C2_Config, runGUID string) {
 					}
 
 					detectFunc := detectInstance.(nowhere2hide.Detectors)
+					for _, configModule := range config.Detection.Module_name {
 
-					if detectFunc.Get_Name() == config.Detection.Module_name {
-						banner_http := detectFunc.Get_Payload_Type()
+						if detectFunc.Get_Name() == configModule {
+							banner_http := detectFunc.Get_Payload_Type()
 
-						if banner_http == "banner" {
-							results, err := db.BannerQuery(fmt.Sprintf("select * from banner where uid = '%s'", runGUID))
-							if err != nil {
-								log.Info(fmt.Sprintf("Detect|%s|Error|Error getting banner hex -> %s", runGUID, err))
-							}
-							for _, banner := range results {
-								var c2D nowhere2hide.C2Detector
+							if banner_http == "banner" {
 
-								bannerSlice, err := hex.DecodeString(banner.Banner_Hex)
+								results, err := db.BannerQuery(fmt.Sprintf("select * from banner where uid = '%s'", runGUID))
 								if err != nil {
-									log.Info(fmt.Sprintf("Detect|%s|Error|Error converting banner hex -> %s", runGUID, err))
+									log.Info(fmt.Sprintf("Detect|%s|Error|Error getting banner hex -> %s", runGUID, err))
 								}
-								if len(bannerSlice) > 0 {
-									c2D.Banner_Payload = bannerSlice
-									res := detectFunc.Process(c2D)
 
-									if res.Valid {
+								for _, banner := range results {
+									var c2D nowhere2hide.C2Detector
 
-										var c2s nowhere2hide.C2Results
-										c2s.UID = utils.GetMD5Hash(fmt.Sprintf("%s_%s_%s", config.Rule_Name, banner.Address, banner.Port))
-										c2s.Address = banner.Address
-										c2s.Port = banner.Port
-										c2s.Malware_Family = config.Family
-										c2s.Rule_Name = config.Rule_Name
-										c2s.Classification = config.Classification
-										c2s.Description = config.Description
-										c2s.Additional_Details = res.Additional
-										c2s.First_Seen = banner.Timestamp
-										c2s.Last_Seen = banner.Timestamp
-
-										addC2(c2s, runGUID)
+									bannerSlice, err := hex.DecodeString(banner.Banner_Hex)
+									if err != nil {
+										log.Info(fmt.Sprintf("Detect|%s|Error|Error converting banner hex -> %s", runGUID, err))
 									}
+									if len(bannerSlice) > 0 {
+										c2D.Banner_Payload = bannerSlice
+										res := detectFunc.Process(c2D)
+
+										if res.Valid {
+
+											var c2s nowhere2hide.C2Results
+											c2s.UID = utils.GetMD5Hash(fmt.Sprintf("%s_%s_%s", config.Rule_Name, banner.Address, banner.Port))
+											c2s.Address = banner.Address
+											c2s.Port = banner.Port
+											c2s.Malware_Family = config.Family
+											c2s.Rule_Name = config.Rule_Name
+											c2s.Classification = config.Classification
+											c2s.Description = config.Description
+											c2s.Additional_Details = res.Additional
+											c2s.First_Seen = banner.Timestamp
+											c2s.Last_Seen = banner.Timestamp
+
+											addC2(c2s, runGUID)
+										}
+									}
+
 								}
+							}
+
+							if banner_http == "http" {
+								fmt.Print("hi")
 
 							}
 
 						}
-
-						if banner_http == "http" {
-							fmt.Print("hi")
-
-						}
-
 					}
 
 				}
