@@ -38,6 +38,10 @@ func (m IPSUM) Get_Name() string {
 	return "ipsum"
 }
 
+func (m IPSUM) Get_QueryBox() bool {
+	return false
+}
+
 func (m IPSUM) Run(c2_config *nowhere2hide.C2_Config, query string, runGUID string) []*nowhere2hide.Scan {
 
 	m.Init()

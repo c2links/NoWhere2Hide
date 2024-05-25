@@ -1,0 +1,152 @@
+{{ define "login"}}
+<button type="button" id=logonButton class="logonButton" onclick="togglePopup('auth')">Click here to login!</button>
+<button type="button" id=logoutButton class="logoutButton" onclick="logout()">Logged In (click to logout)</button>
+
+
+<!--
+Script functions to facilitate authentication and setting the jwt in session storage
+-->
+
+<script>
+  checkLogon()
+  // Function to toggle the visibility of the pop-up form
+
+  async function auth() {
+    event.preventDefault(); // Prevent default form submission
+    var jwt = document.getElementById('jwt_token').value;
+    try {
+      const response = await fetch("/Auth", { method: "POST", body: new URLSearchParams({ "c2-auth": jwt }) })
+      const data = await response.text()
+
+      if (data == "Success") {
+        closePopup('auth')
+        sessionStorage.setItem('jwtKey', jwt);
+        checkLogon()
+      }
+      else {
+        closePopup('auth')
+        togglePopup("fail")
+      }
+    }
+    catch (error) {
+      console.log(error)
+
+    }
+
+  }
+
+  function togglePopup(type) {
+
+    if (type == "auth") {
+      var popup = document.getElementById("loginForm");
+      popup.style.display = "block";
+    }
+
+    if (type == "fail") {
+      var popup = document.getElementById("failForm");
+      popup.style.display = "block";
+    }
+
+    if (type == "loadedSuccess") {
+      var popup = document.getElementById("loadedSuccessForm");
+      popup.style.display = "block";
+    }
+
+    if (type == "loadedFail") {
+      var popup = document.getElementById("loadedFailForm");
+      popup.style.display = "block";
+    }
+
+    if (type == "runsuccess") {
+        var popup = document.getElementById("runsuccessForm");
+        popup.style.display = "block";
+      }
+    
+    if (type == "createdsuccess") {
+        var popup = document.getElementById("createdsuccessForm");
+        popup.style.display = "block";
+    }
+    
+    if (type == "createdfail") {
+        var popup = document.getElementById("createdfailForm");
+        popup.style.display = "block";
+    }
+
+    if (type == "success") {
+        var popup = document.getElementById("successForm");
+        popup.style.display = "block";
+    }
+
+    if (type == "unauth") {
+        var popup = document.getElementById("unauthForm");
+        popup.style.display = "block";
+    }
+  }
+
+  function closePopup(type) {
+    if (type == "auth") {
+      document.getElementById("loginForm").style.display = "none";
+    }
+    if (type == "fail") {
+      document.getElementById("failForm").style.display = "none";
+    }
+    if (type == "loadedSuccess") {
+      var popup = document.getElementById("loadedSuccessForm");
+      popup.style.display = "none";
+
+    }
+
+    if (type == "runsuccess") {
+        document.getElementById("runsuccessForm").style.display = "none";
+        window.location.href = "/runscan";
+      }
+
+    if (type == "loadedFail") {
+      var popup = document.getElementById("loadedFailForm");
+      popup.style.display = "none";
+    }
+    if (type == "createdsuccess") {
+        event.preventDefault();
+        var popup = document.getElementById("createdsuccessForm");
+        popup.style.display = "none";
+        
+        window.location.href = '/viewsigs';
+    }
+    
+    if (type == "createdfail") {
+        event.preventDefault();
+        var popup = document.getElementById("createdfailForm");
+        popup.style.display = "none";
+        window.location.href = '/viewsigs';
+    }
+
+    if (type == "success") {
+        var popup = document.getElementById("successForm");
+        popup.style.display = "none";
+    }
+
+    if (type == "unauth") {
+        var popup = document.getElementById("unauthForm");
+        popup.style.display = "none";
+    }
+  }
+
+  function checkLogon() {
+    const jwtKey = sessionStorage.getItem('jwtKey');
+    if (jwtKey) {
+      document.getElementById('logonButton').style.display = 'none';
+      document.getElementById('logoutButton').style.display = 'inline-block';
+    } else {
+      document.getElementById('logonButton').style.display = 'inline-block';
+      document.getElementById('logoutButton').style.display = 'none';
+
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem("jwtKey")
+    checkLogon()
+  }
+
+</script>
+{{end}}

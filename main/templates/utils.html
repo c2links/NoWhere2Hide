@@ -1,0 +1,56 @@
+{{define "utilities"}}
+
+<h1>IP List Format</h1>
+
+<form id="ipPortForm">
+  <label for="ipAddresses">Enter IP Addresses (one per line)):</label><br>
+  <textarea id="ipAddresses" name="ipAddresses" rows="4" cols="50"></textarea><br>
+
+  <label for="ports">Enter Ports (comma-separated):</label><br>
+  <textarea id="ports" name="ports" rows="4" cols="50"></textarea><br>
+
+  <input type="button" class="customButton" value="Create" onclick="combineIPsAndPorts()">
+</form>
+
+<br><br>
+
+<label for="combinedResult">IP List:</label><br>
+<textarea id="combinedResult" name="combinedResult" rows="4" cols="50"></textarea>
+
+<script>
+  function combineIPsAndPorts() {
+    var ipAddresses = document.getElementById("ipAddresses").value.trim().split("\n");
+    var ports = document.getElementById("ports").value.trim().split(",");
+
+    var combinedResult = '';
+
+    // Iterate through each IP address
+    for (var i = 0; i < ipAddresses.length; i++) {
+        var ipAddress = ipAddresses[i].trim();
+        // Skip empty lines
+        if (ipAddress === '') {
+            continue;
+        }
+        
+        // Iterate through each port
+        for (var j = 0; j < ports.length; j++) {
+            var port = ports[j].trim();
+            // Skip empty ports
+            if (port === '') {
+                continue;
+            }
+
+            // Combine IP address and port
+            combinedResult += ipAddress + ':' + port + ',';
+        }
+    }
+
+    // Remove trailing comma
+    combinedResult = combinedResult.replace(/,$/, '');
+
+    // Update the combined result in the text area
+    document.getElementById("combinedResult").value = combinedResult;
+}
+  </script>
+
+{{end}}

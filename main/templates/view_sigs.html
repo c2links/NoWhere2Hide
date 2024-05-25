@@ -1,0 +1,73 @@
+{{define "viewsigs"}}
+
+  <h2> Select the Signature to Edit</h2><br>
+  <div class="three">
+    <script>
+
+      getsigs()
+
+      async function getsigs() {
+
+        var form = document.createElement("form");
+        form.setAttribute("method", "get");
+        form.setAttribute("action", "editsig");
+
+
+        const response = await fetch("/Sigs")
+        const data = await response.json() // Read the JSON body of the response
+        data.forEach(c2 => {
+          var jobs = document.createElement("input");
+          jobs.setAttribute("type", "radio");
+          jobs.setAttribute("name", "signatures");
+          jobs.setAttribute("id", c2);
+          form.appendChild(jobs);
+
+          var job_label = document.createElement("label");
+          job_label.setAttribute("for", c2);
+          job_label.innerHTML = c2 + "<br/>";
+          job_label.classList.add("customLabel");
+          form.appendChild(job_label);
+
+
+          var br = document.createElement("br");
+          form.appendChild(br);
+
+        })
+
+        var br = document.createElement("br");
+        form.appendChild(br);
+
+        var br = document.createElement("br");
+        form.appendChild(br);
+
+        var button = document.createElement("button");
+        button.textContent = "Edit selected signature";
+        button.id = "signature";
+
+        button.onclick = function () {
+
+
+          var add = document.createElement("input");
+          add.type = "text"; // Set the input type
+          add.name = "sig"; // Set the ID
+
+          var selectedOption = document.querySelector('input[name="signatures"]:checked');
+          add.value = selectedOption.id;
+          form.appendChild(add);
+
+          form.submit();
+        }
+
+        form.append(button)
+
+
+        document.getElementsByTagName("body")[0]
+          .appendChild(form);
+      }
+
+    </script>
+  </div>
+</body>
+
+</html>
+{{end}}

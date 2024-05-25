@@ -1,0 +1,48 @@
+{{define "index"}}
+<h1>C2 Results</h1>
+  <!-- 
+    Specify the table that will be used to display the people database
+  -->
+  <input type="submit" name="retro" value="Click to reload detections (Retro Detect)" onclick="reload()">
+
+
+  <script>
+
+    load();
+
+    async function load() {
+
+      const response = await fetch("/C2List", { method: "GET" })
+      const data = await response.json()  //.then(response => response.json()) // Read the JSON body of the response
+      data.forEach(c2 => {
+
+        var elementToRemove = document.getElementById(c2.Malware_Family);
+        if (elementToRemove) {
+          elementToRemove.remove()
+        }
+
+
+        var customButton = document.createElement('a');
+        customButton.id = c2.Malware_Family
+        customButton.href = '/c2?malware_family=' + c2.Malware_Family; // Replace '#' with the actual URL
+        customButton.className = 'customButton';
+        customButton.innerHTML = c2.Malware_Family + " (" + c2.Count + ")";
+
+        // Append the link to the body or any other desired element
+        document.body.appendChild(customButton);
+
+      })
+    }
+
+    async function reload() {
+      const response = await fetch("/Retro", { method: "POST", body: new URLSearchParams({ "c2-auth": sessionStorage.getItem('jwtKey') }) })
+      const data = await response.text()
+      if (data == "Successful") {
+        load();
+        togglePopup("loadedSuccess")
+      }
+      else { togglePopup("loadedFail") }
+    }
+
+  </script>
+{{end}}

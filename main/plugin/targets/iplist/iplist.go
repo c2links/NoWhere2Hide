@@ -36,6 +36,10 @@ func (m IPLIST) Get_Name() string {
 	return "iplist"
 }
 
+func (m IPLIST) Get_QueryBox() bool {
+	return true
+}
+
 func (m IPLIST) Run(c2_config *nowhere2hide.C2_Config, query string, runGUID string) []*nowhere2hide.Scan {
 
 	m.Init()

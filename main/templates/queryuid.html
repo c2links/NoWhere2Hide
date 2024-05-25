@@ -1,0 +1,242 @@
+{{define "queryuid"}}
+    <h1>Scan Results for {{.uid}} </h1>
+
+    <div class="tables-container">
+        <div class="table-section">
+            <h3>Database Names</h3>
+            <table id="jarm-table" border="1">
+                <thead>
+                    <tr>
+                        <th>banner</th>
+                        <th>http</th>
+                        <th>tls</th>
+                        <th>jarm</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <div class="table-section">
+            <h3>Global Field Names</h3>
+            <table id="tls-table" border="1">
+                <thead>
+                    <tr>
+                        <th>uid</th>
+                        <th>address</th>
+                        <th>port</th>
+                        <th>status</th>
+                        <th>timestamp</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <div class="table-section">
+            <h3>Banner Field Names</h3>
+            <table id="tls-table" border="1">
+                <thead>
+                    <tr>
+                        <th>banner_text</th>
+                        <th>banner_hex</th>
+                        <th>banner_length</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <div class="table-section">
+            <h3>HTTP Field Names</h3>
+            <table id="http-table" border="1">
+                <thead>
+                    <tr>
+                        <th>status_code</th>
+                        <th>headers</th>
+                        <th>body</th>
+                        <th>body_sha256</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+        <div class="table-section">
+            <h3>JARM Field Names</h3>
+            <table id="jarm-table" border="1">
+                <thead>
+                    <tr>
+                        <th>fingerprint</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <h3>TLS Fields</h3>
+        <table id="banner-table" border="1">
+            <thead>
+                <tr>
+                    <th>version</th>
+                    <th>serial_number</th>
+                    <th>issuer_common_name</th>
+                    <th>issuer_country</th>
+                    <th>issuer_organization</th>
+                    <th>issuer_dn</th>
+                    <th>subject_common_name</th>
+                    <th>subject_country</th>
+                    <th>subject_organization</th>
+                    <th>subject_dn</th>
+                    <th>fingerprint_sha1</th>
+                    <th>ja4x</th>
+                    <!-- Add other Banner fields here -->
+                </tr>
+            </thead>
+        </table>
+        <br>
+    <label for="predefined-query-select">Predefined Queries:</label>
+    <select id="predefined-query-select" onchange="setPredefinedQuery()">
+        <option value="">Select a query</option>
+        <option value="SELECT uid,address,port,version,serial_number,issuer_common_name,issuer_country,issuer_organization,issuer_organization, issuer_dn,subject_common_name,subject_country, subject_organization, subject_dn, fingerprint_sha256, ja4x, timestamp  FROM tls WHERE uid = '{{.uid}}'">SELECT * FROM tls WHERE UID = {{.uid}}</option>
+        <option value="SELECT uid,address,port,status,banner_hex,banner_text,banner_length,timestamp FROM banner WHERE uid='{{.uid}}'">SELECT * FROM banner WHERE UID = {{.uid}}</option>
+        <option value="SELECT uid,address,port,status_code,protocol_name,headers,body,body_sha256,timestamp FROM http WHERE uid='{{.uid}}'">SELECT * FROM http WHERE UID = {{.uid}}</option>
+        <option value="SELECT uid,address,port,fingerprint,timestamp FROM jarm WHERE uid='{{.uid}}'">SELECT * FROM jarm WHERE UID = {{.uid}}</option>
+    </select>
+    
+    <br><br>
+
+    <label for="custom-query-input">Enter Postgres Query:</label>
+    <input type="text" id="custom-query-input" class="query-input">
+
+    <br><br>
+
+    <button onclick="control()">Fetch Results</button>
+    <br><br>
+
+    <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button
+    onclick="nextPage()">Next</button>
+
+    <table id="results-table" border="1" class="PTABLE">
+        <thead>
+            <tr id="results-header">
+                <!-- Header will be populated dynamically -->
+            </tr>
+        </thead>
+        <tbody id="results-body">
+            <!-- Data will be populated dynamically -->
+        </tbody>
+    </table>
+    <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button
+    onclick="nextPage()">Next</button>
+
+    <script>
+
+        offset = 0;
+        current = 1;
+        limit=100;
+    
+        async function recordCountQ(query) {
+            const response = await fetch("/RecordCountQ", { method: "POST", body: new URLSearchParams({ 'query': query }) });
+            const record = await response.text();
+            return record;
+        }
+
+        function encodeHTMLEntities(text) {
+            let textArea = document.createElement('textarea');
+            textArea.innerText = text;
+            let encodedOutput = textArea.innerHTML;
+            let arr = encodedOutput.split('<br>');
+            encodedOutput = arr.join('\n');
+            return encodedOutput;
+        }
+
+        function setPredefinedQuery() {
+            const predefinedQuerySelect = document.getElementById('predefined-query-select');
+            const customQueryInput = document.getElementById('custom-query-input');
+            customQueryInput.value = predefinedQuerySelect.value;
+        }
+
+        function nextPage() {
+
+            if (current < totalPages) {
+                current++;
+                offset = offset + limit;
+                document.getElementById("currentDyn").innerText = current;
+                control();
+            }
+            else { control(); }
+            }
+
+        function prevPage() {
+
+            if (current > 1) {
+                current--;
+                offset = offset - limit;
+                document.getElementById("currentDyn").innerText = current;
+                control();
+            }
+            else { control(); }
+            }
+
+        function control() {
+
+            const query = document.getElementById('custom-query-input').value;
+            document.getElementById("currentDyn").innerText = current;
+            
+            recordCountQ(query).then(function (resultQ) {
+                totalcount = resultQ;
+                document.getElementById("recordP").innerText = "Total Results: " + totalcount;
+                totalPages = Math.ceil(totalcount / limit);
+                document.getElementById("totalDyn").innerText = totalPages;
+            })
+
+            fetchQueryResults(query,limit,offset);
+  }
+
+    async function fetchQueryResults(query,limit,offset) {
+
+        const wideCol = ["banner_hex","banner_text","headers","body"]
+        const smallCol = ["id","port","status","status_code","status_line","banner_length"]
+        const response = await fetch("/Query", { method: "POST", body: new URLSearchParams({ 'pg': query, 'limit': limit, "offset": offset }) })
+        const data = await response.json() // Read the JSON body of the response
+        .then(data => {
+            const resultsTable = document.getElementById('results-table');
+            const resultsHeader = document.getElementById('results-header');
+            const resultsBody = document.getElementById('results-body');
+    
+            resultsHeader.innerHTML = ''; // Clear previous header
+            resultsBody.innerHTML = ''; // Clear previous body
+    
+            // Populate table header
+            data.columns.forEach(column => {
+                const th = document.createElement('th');
+                if (wideCol.includes(column)){
+                    th.textContent = column;
+                    th.style.width = "100px";
+                    resultsHeader.appendChild(th);
+
+                }
+                else if (smallCol.includes(column)){
+                    th.textContent = column;
+                    th.style.width = "5px";
+                    resultsHeader.appendChild(th);
+
+                } else{ 
+                    th.textContent = column;
+                    th.style.width = "20px";
+                    resultsHeader.appendChild(th);
+                }
+            });
+    
+            // Populate table body
+            data.rows.forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                resultsBody.appendChild(tr);
+            });
+        })
+        .catch(error => console.error('Error fetching query results:', error));
+    }
+</script>
+{{end}}

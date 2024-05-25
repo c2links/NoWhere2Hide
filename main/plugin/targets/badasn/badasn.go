@@ -40,6 +40,10 @@ func (m BADASN) Get_Name() string {
 	return "badasn"
 }
 
+func (m BADASN) Get_QueryBox() bool {
+	return false
+}
+
 // Main collector function. Required arguments are the C2_config and the runGUID. Most collectors will also need a query. however this is not a required field.
 func (m BADASN) Run(c2_config *nowhere2hide.C2_Config, query string, runGUID string) []*nowhere2hide.Scan {
 

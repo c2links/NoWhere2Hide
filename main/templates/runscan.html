@@ -1,0 +1,88 @@
+{{define "runscan"}}
+  <h2>Run a Scan</h2>
+  <h3> Select the Signatures to Scan</h3>
+  <div class="three">
+    <input type="submit" id="huntio_certs" name="huntio_certs" value="Click to load recent Hunt IO Cert Data"
+      onclick="hunt_io_cert()">
+  </div>
+  <br>
+  <div id="signatures"></div>
+  <div id="status">
+    <iframe name="hiddenFrame" width="0" height="0" border="0"></iframe>
+  </div>
+
+  <script>
+
+    runScanForm()
+
+    async function runScanForm() {
+
+      var form = document.createElement("form");
+      form.setAttribute("method", "post");
+      form.setAttribute("action", "/RunScan");
+      form.setAttribute("target", "hiddenFrame");
+      form.setAttribute("onsubmit", "refreshPage()");
+
+
+      var br = document.createElement("br");
+      form.appendChild(br);
+
+      var auth = document.createElement("input");
+      auth.type = "hidden";
+      auth.name = "c2-auth";
+      auth.value = sessionStorage.getItem('jwtKey');
+
+      form.appendChild(auth);
+
+      const response = await fetch("/Sigs")
+      const data = await response.json() // Read the JSON body of the response
+      data.forEach(c2 => {
+        var jobs = document.createElement("input");
+        jobs.setAttribute("type", "checkbox");
+        jobs.setAttribute("name", c2);
+        jobs.setAttribute("id", c2);
+        form.appendChild(jobs);
+        //document.getElementsByTagName("body")[0].appendChild(form);
+
+
+        var job_label = document.createElement("label");
+        job_label.setAttribute("for", c2);
+        job_label.innerHTML = c2 + "<br/>";
+        job_label.classList.add("customLabel");
+        form.appendChild(job_label);
+        //document.getElementsByTagName("body")[0].appendChild(form);
+
+        var br = document.createElement("br");
+        form.appendChild(br);
+      })
+
+      var br = document.createElement("br");
+      form.appendChild(br);
+
+      var br = document.createElement("br");
+      form.appendChild(br);
+
+      var submit = document.createElement("input");
+      submit.setAttribute("type", "submit");
+      submit.setAttribute("value", "Submit");
+      form.appendChild(submit);
+
+      document.getElementById("signatures").appendChild(form);
+    }
+    
+    function refreshPage() {
+
+      togglePopup("runsuccess")
+      //window.location.href = "/runscan.html"
+    }
+
+    async function hunt_io_cert() {
+      const response = await fetch("/HuntIOCert", { method: "POST", body: new URLSearchParams({ "c2-auth": sessionStorage.getItem('jwtKey') }) })
+      const data = await response.text()
+      if (data == "Successful") {
+        togglePopup("success")
+      } else { togglePopup("fail") }
+    }
+
+  </script>
+{{end}}

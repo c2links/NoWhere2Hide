@@ -53,6 +53,10 @@ func (m SHODAN) Get_Name() string {
 	return "shodan"
 }
 
+func (m SHODAN) Get_QueryBox() bool {
+	return true
+}
+
 func (m SHODAN) Run(c2_config *nowhere2hide.C2_Config, query string, runGUID string) []*nowhere2hide.Scan {
 
 	m.Init()

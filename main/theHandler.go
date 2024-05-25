@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/fs"
 	"net/http"
 	"nowhere2hide"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -17,14 +17,18 @@ import (
 )
 
 /*
-	Structs for UI processing, there may be some overlap between these structs and NOWHERE2Hide structs.
-	The goal is to separate UI from NOWHERE2HIDE where possible.
+Structs for UI processing, there may be some overlap between these structs and NOWHERE2Hide structs.
+The goal is to separate UI from NOWHERE2HIDE where possible.
 */
+var templates *template.Template
 
 type C2_Record struct {
 	IP             string
 	Port           int
 	Malware_Family string
+	Rule_Name      string
+	First_Seen     string
+	Last_Seen      string
 }
 
 type C2_Count struct {
@@ -32,56 +36,9 @@ type C2_Count struct {
 	Count          int
 }
 
-type Banner_Record struct {
-	Address       string
-	Port          string
-	Status        string
-	Banner_Hex    string
-	Banner_Text   string
-	Banner_Length int
-	Timestamp     string
-}
-
-type Jarm_Record struct {
-	Address     string
-	Port        string
-	Status      string
-	Fingerprint string
-	Timestamp   string
-}
-
-type TLS_Record struct {
-	Address              string
-	Port                 string
-	Status               string
-	Timestamp            string
-	Version              int
-	Serial_Number        string
-	Issuer_Common_Name   string
-	Issuer_Country       string
-	Issuer_Organization  string
-	Issuer_DN            string
-	Subject_Common_Name  string
-	Subject_Country      string
-	Subject_Organization string
-	Subject_DN           string
-	Fingerprint_Md5      string
-	Fingerprint_SHA1     string
-	Fingerprint_SHA256   string
-	JA4X                 string
-}
-
-type HTTP_Record struct {
-	Address       string
-	Port          string
-	Status        string
-	Status_Line   string
-	Status_Code   int
-	Protocol_Name string
-	Headers       string
-	Body          string
-	Body_SHA256   string
-	Timestamp     string
+type QueryResult struct {
+	Columns []string        `json:"columns"`
+	Rows    [][]interface{} `json:"rows"`
 }
 
 type Job_Status struct {
@@ -96,6 +53,11 @@ type Job_Status struct {
 	Detection_Finished bool
 	Job_Completed      string
 	Errors             string
+}
+
+type TempCollect struct {
+	Source string
+	Query  string
 }
 
 /*
@@ -151,7 +113,7 @@ func getC2QueryHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getBannerHandler(w http.ResponseWriter, r *http.Request) {
+func getQueryHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
@@ -159,150 +121,10 @@ func getBannerHandler(w http.ResponseWriter, r *http.Request) {
 		log.Info(fmt.Sprintf("UI Error -> %s", err))
 	}
 
-	BannerList, _ := store.GetBanner(r.Form.Get("limit"), r.Form.Get("offset"))
+	results, _ := store.ExecuteQuery(r.Form.Get("pg"), r.Form.Get("limit"), r.Form.Get("offset"))
 
-	bannerListBytes, err := json.Marshal(BannerList)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-	w.Write(bannerListBytes)
-
-}
-
-func getTLSHandler(w http.ResponseWriter, r *http.Request) {
-
-	err := r.ParseForm()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	TLSList, _ := store.GetTLS(r.Form.Get("limit"), r.Form.Get("offset"))
-
-	tlsListBytes, err := json.Marshal(TLSList)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	w.Write(tlsListBytes)
-
-}
-
-func getBannerQueryHandler(w http.ResponseWriter, r *http.Request) {
-
-	err := r.ParseForm()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-	BannerList, _ := store.GetBannerQuery(r.Form.Get("pg"), r.Form.Get("limit"), r.Form.Get("offset"))
-
-	bannerListBytes, err := json.Marshal(BannerList)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	w.Write(bannerListBytes)
-}
-
-func getJarmHandler(w http.ResponseWriter, r *http.Request) {
-
-	err := r.ParseForm()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	jarmList, _ := store.GetJarm(r.Form.Get("limit"), r.Form.Get("offset"))
-
-	jarmListBytes, err := json.Marshal(jarmList)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	w.Write(jarmListBytes)
-
-}
-
-func getHTTPHandler(w http.ResponseWriter, r *http.Request) {
-
-	err := r.ParseForm()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	httpList, _ := store.GetHTTP(r.Form.Get("limit"), r.Form.Get("offset"))
-
-	httpListBytes, err := json.Marshal(httpList)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	w.Write(httpListBytes)
-
-}
-
-func getJarmQueryHandler(w http.ResponseWriter, r *http.Request) {
-
-	err := r.ParseForm()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-	jarmList, _ := store.GetJarmQuery(r.Form.Get("pg"), r.Form.Get("limit"), r.Form.Get("offset"))
-
-	jarmListBytes, err := json.Marshal(jarmList)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	w.Write(jarmListBytes)
-
-}
-
-func getHTTPQueryHandler(w http.ResponseWriter, r *http.Request) {
-
-	err := r.ParseForm()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	httpList, _ := store.GetHTTPQuery(r.Form.Get("pg"), r.Form.Get("limit"), r.Form.Get("offset"))
-	httpListBytes, err := json.Marshal(httpList)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	w.Write(httpListBytes)
-}
-
-func getTLSQueryHandler(w http.ResponseWriter, r *http.Request) {
-
-	err := r.ParseForm()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	tlsList, _ := store.GetTLSQuery(r.Form.Get("pg"), r.Form.Get("limit"), r.Form.Get("offset"))
-	tlsListBytes, err := json.Marshal(tlsList)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	w.Write(tlsListBytes)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(results)
 }
 
 func getSigsHandler(w http.ResponseWriter, r *http.Request) {
@@ -398,6 +220,7 @@ func runScanHandler(w http.ResponseWriter, r *http.Request) {
 
 	t := time.Now()
 	log.Info(fmt.Sprintf("UI -> Scan initiated at %s -> %s", t.Format("2006-01-02 15:04:05"), configPaths))
+	w.Write([]byte("Job started, go to job status page"))
 	Run(configPaths)
 
 }
@@ -414,18 +237,23 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 	var c2_targets []nowhere2hide.C2_Target
 	var detections []nowhere2hide.Detection_Query
 
-	var censys []string
-	var shodan []string
-	var badasn []string
-	var newdomain []string
-	var ipsum []string
-	var iplist []string
-	var tdomain []string
-
-	//var binaryedge []string
-	//var urlio []string
+	var collectors = []TempCollect{}
+	var custom_detectors []string
+	var createdDate string
+	create := true
 
 	for element, value := range r.Form {
+
+		if element == "edited" {
+			if value[0] == "true" {
+				create = false
+			}
+		}
+
+		if element == "Created_Date" {
+			createdDate = value[0]
+
+		}
 
 		if element == "Rule_Name" {
 			if strings.Contains(value[0], " ") {
@@ -435,6 +263,10 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 				sig_config.Rule_Name = value[0]
 			}
 
+		}
+
+		if element == "Update" {
+			create = false
 		}
 
 		if element == "Malware_Family" {
@@ -461,44 +293,16 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if strings.Contains(element, "query") {
-			if value[0] == "shodan" {
-				shodan = append(shodan, value[1])
-			}
-			if value[0] == "censys" {
-				censys = append(censys, value[1])
-			}
-			if value[0] == "badasn" {
-				badasn = append(badasn, "enabled")
-			}
-			if value[0] == "newdomain" {
-				newdomain = append(newdomain, "enabled")
-			}
-			if value[0] == "tdomain" {
-				tdomain = append(tdomain, value[1])
-			}
-			if value[0] == "ipsum" {
-				ipsum = append(ipsum, "enabled")
-			}
-			if value[0] == "iplist" {
 
-				pattern := `^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+)(,\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+)*$`
-				regex := regexp.MustCompile(pattern)
-				if regex.MatchString(value[1]) {
-					iplist = append(iplist, value[1])
-				} else {
-					w.Write([]byte("IP LIST was not in the right format"))
-					log.Info("Create / Edit Signature -> IP LIST was not in the right format")
-				}
+			var temp TempCollect
+			if len(value) == 2 {
+				temp.Source = value[0]
+				temp.Query = value[1]
+				collectors = append(collectors, temp)
+			} else {
+				temp.Source = value[0]
+				collectors = append(collectors, temp)
 			}
-
-			/*
-				if value[0] == "binaryedge" {
-					binaryedge = append(binaryedge, value[1])
-				}
-				if value[0] == "urlio" {
-					urlio = append(urlio, value[1])
-				}
-			*/
 		}
 
 		if element == "TLS_Enabled" {
@@ -533,10 +337,9 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 			sig_config.Detection.Condition = value[0]
 		}
 
-		if element == "c2_plugin" {
+		if strings.Contains(element, "_custom_") {
 			sig_config.Detection.Module = true
-			sig_config.Detection.Module_name = value[0]
-
+			custom_detectors = append(custom_detectors, value[0])
 		}
 
 		if strings.Contains(element, "detection") {
@@ -546,63 +349,42 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 			temp.Table = value[0]
 			temp.Query = value[1]
 			detections = append(detections, temp)
-
 		}
-
 	}
 
 	if sig_config.Detection.Simple {
 		sig_config.Detection.Queries = detections
 	}
 
-	var shodanTargets nowhere2hide.C2_Target
-	var censysTargets nowhere2hide.C2_Target
-	var badasnTargets nowhere2hide.C2_Target
-	var newdomainTargets nowhere2hide.C2_Target
-	var tdomainTargets nowhere2hide.C2_Target
-	var ipsumTargets nowhere2hide.C2_Target
-	var iplistTargets nowhere2hide.C2_Target
+	if sig_config.Detection.Module == true {
+		sig_config.Detection.Module_name = custom_detectors
 
-	// var binaryedgeTargets nowhere2hide.C2_Target
-	// var urlioTargets nowhere2hide.C2_Target
+	}
 
-	shodanTargets.Source = "shodan"
-	shodanTargets.TargetQuery = shodan
-	c2_targets = append(c2_targets, shodanTargets)
+	var processed []string
 
-	censysTargets.Source = "censys"
-	censysTargets.TargetQuery = censys
-	c2_targets = append(c2_targets, censysTargets)
+	for _, tempCollect := range collectors {
+		p := false
+		for _, process := range processed {
+			if process == tempCollect.Source {
+				p = true
+			}
+		}
+		if !p {
+			var tempQueries []string
+			for _, tc := range collectors {
+				if tempCollect.Source == tc.Source {
+					tempQueries = append(tempQueries, tc.Query)
+				}
+			}
+			processed = append(processed, tempCollect.Source)
+			var temp nowhere2hide.C2_Target
+			temp.Source = tempCollect.Source
+			temp.TargetQuery = tempQueries
+			c2_targets = append(c2_targets, temp)
+		}
 
-	badasnTargets.Source = "badasn"
-	badasnTargets.TargetQuery = badasn
-	c2_targets = append(c2_targets, badasnTargets)
-
-	newdomainTargets.Source = "newdomain"
-	newdomainTargets.TargetQuery = newdomain
-	c2_targets = append(c2_targets, newdomainTargets)
-
-	tdomainTargets.Source = "tdomain"
-	tdomainTargets.TargetQuery = tdomain
-	c2_targets = append(c2_targets, tdomainTargets)
-
-	ipsumTargets.Source = "ipsum"
-	ipsumTargets.TargetQuery = ipsum
-	c2_targets = append(c2_targets, ipsumTargets)
-
-	iplistTargets.Source = "iplist"
-	iplistTargets.TargetQuery = iplist
-	c2_targets = append(c2_targets, iplistTargets)
-
-	/*
-		binaryedgeTargets.Source = "badasn"
-		binaryedgeTargets.TargetQuery = binaryedge
-		c2_targets = append(c2_targets, binaryedgeTargets)
-
-		urlioTargets.Source = "urlio"
-		urlioTargets.TargetQuery = urlio
-		c2_targets = append(c2_targets, urlioTargets)
-	*/
+	}
 	sig_config.Targets = c2_targets
 
 	if sig_config.Scan_Banner.Enabled {
@@ -655,8 +437,8 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 						sig_config.Scan_HTTP.FailHTTPtoHTTPs = false
 					} else {
 						sig_config.Scan_HTTP.HTTPS = false
-						sig_config.Scan_HTTP.RetryHTTPS = false
-						sig_config.Scan_HTTP.FailHTTPtoHTTPs = true
+						sig_config.Scan_HTTP.RetryHTTPS = true
+						sig_config.Scan_HTTP.FailHTTPtoHTTPs = false
 					}
 				}
 			}
@@ -683,10 +465,19 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := time.Now()
-	sig_config.Created = t.Format("2006-01-02 15:04:05")
+	if create {
+		sig_config.Created = t.Format("2006-01-02 15:04:05")
+		sig_config.Last_Edit = t.Format("2006-01-02 15:04:05")
+
+	} else {
+		sig_config.Last_Edit = t.Format("2006-01-02 15:04:05")
+		sig_config.Created = createdDate
+	}
+
 	sig_config.GUID = guid.New().String()
 
 	yamlData, err := yaml.Marshal(&sig_config)
+
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		log.Info(fmt.Sprintf("UI Error -> %s", err))
@@ -704,25 +495,6 @@ func addSigHandler(w http.ResponseWriter, r *http.Request) {
 	log.Info(fmt.Sprintf("UI -> Config %s created at %s", sig_config.Rule_Name, t.Format("2006-01-02 15:04:05")))
 }
 
-func getRecordCountHandler(w http.ResponseWriter, r *http.Request) {
-
-	err := r.ParseForm()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-
-	RecordCount, _ := store.GetRecordCount(r.Form.Get("table"))
-
-	RecordCountBytes, err := json.Marshal(RecordCount)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Info(fmt.Sprintf("UI Error -> %s", err))
-	}
-	w.Write(RecordCountBytes)
-
-}
-
 func getRecordCountQHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
@@ -731,7 +503,7 @@ func getRecordCountQHandler(w http.ResponseWriter, r *http.Request) {
 		log.Info(fmt.Sprintf("UI Error -> %s", err))
 	}
 
-	RecordCount, _ := store.GetRecordCountQ(r.Form.Get("table"), r.Form.Get("query"))
+	RecordCount, _ := store.GetRecordCountQ(r.Form.Get("query"))
 
 	RecordCountBytes, err := json.Marshal(RecordCount)
 	if err != nil {
@@ -798,4 +570,155 @@ func clearDBQueryHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte("Successful"))
 
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"index": "index"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func c2Handler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"c2": "c2"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func runscanHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"runscan": "runscan"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func queryHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"query": "query"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"status": "status"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func queryUIDHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		log.Info(fmt.Sprintf("UI Error -> %s", err))
+	}
+
+	uid := r.Form.Get("uid")
+
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err = templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"queryuid": "queryuid", "uid": uid})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func readmeHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"readme": "readme"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func utilitiesHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"utilities": "utilities"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func clearHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"cleardb": "cleardb"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func newsigHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"newsig": "newsig", "targets": getTargetSources(), "custom": getCustomDetection()})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func viewsigsHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"viewsigs": "viewsigs"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func editsigHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"editsig": "editsig", "targets": getTargetSources(), "custom": getCustomDetection()})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }

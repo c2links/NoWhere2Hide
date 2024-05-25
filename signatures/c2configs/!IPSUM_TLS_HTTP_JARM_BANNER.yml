@@ -1,5 +1,5 @@
 rule_name: '!IPSUM_TLS_HTTP_JARM_BANNER'
-guid: b96ca534-ad22-4424-967d-52b36490a0f4
+guid: 632f61ae-7953-4752-94b4-6756645cfa47
 family: IPSUM
 version: ""
 description: This signature performs Banner, TLS, JARM and HTTP scans using the IPSUM
@@ -9,22 +9,11 @@ classification: Other
 references:
 - https://github.com/stamparm/ipsum
 created: "2024-04-24 00:58:57"
+last_edit: "2024-05-24 14:56:35"
 targets:
-- source: shodan
-  targetquery: []
-- source: censys
-  targetquery: []
-- source: badasn
-  targetquery: []
-- source: newdomain
-  targetquery: []
-- source: tdomain
-  targetquery: []
 - source: ipsum
   targetquery:
-  - enabled
-- source: iplist
-  targetquery: []
+  - ""
 scan_banner:
   enabled: true
   probefile: ""
@@ -44,7 +33,7 @@ scan_jarm:
   enabled: true
 detection:
   module: false
-  module_name: ""
+  module_name: []
   simple: false
   condition: all
   queries: []

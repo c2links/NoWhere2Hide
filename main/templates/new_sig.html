@@ -1,0 +1,759 @@
+
+{{define "newsig"}}
+  <script>
+
+    var disabled_targets = [];
+
+    function addJARM() {
+
+      // JARM Form container
+      var jarm_container = document.getElementById("jarm-container");
+      if (jarm_container.childNodes.length == 1) {
+
+        // JARM label for user
+        var enableLabel = document.createElement("label");
+        enableLabel.innerHTML = "JARM Scanning Enabled. No additional options to set.";
+        jarm_container.appendChild(enableLabel);
+
+
+        // Hidden checkbox to show JARM is enabled
+        var jarmCheckbox = document.createElement("input");
+        jarmCheckbox.setAttribute("type", "checkbox");
+        jarmCheckbox.setAttribute("name", "JARM_Enabled");
+        jarmCheckbox.style.display = "none";
+        jarmCheckbox.checked = true;
+        jarm_container.appendChild(jarmCheckbox);
+
+        // New line element
+        var newLine = document.createElement("br");
+        jarm_container.appendChild(newLine);
+      }
+
+    }
+
+    function removeJARM() {
+
+      var jarm_container = document.getElementById("jarm-container");
+      var remove = ["label", "input", "br"];
+
+      for (var i = 0; i < remove.length; i++) {
+        var inputs = jarm_container.getElementsByTagName(remove[i]);
+        jarm_container.removeChild(inputs[inputs.length - 1]);
+        if (inputs.length > 0) { }
+      }
+
+    }
+
+    function addTLS() {
+
+      // TLS form container
+      var tls_container = document.getElementById("tls-container");
+      if (tls_container.childNodes.length == 1) {
+
+      // TLS label for users
+      var enableLabel = document.createElement("label");
+      enableLabel.innerHTML = "TLS Scanning Enabled. No additional options to set.";
+      tls_container.appendChild(enableLabel);
+
+      // Hidden checkbox to show TLS is enabled
+      var tlsCheckbox = document.createElement("input");
+      tlsCheckbox.setAttribute("type", "checkbox");
+      tlsCheckbox.setAttribute("name", "TLS_Enabled");
+      tlsCheckbox.style.display = "none";
+      tlsCheckbox.checked = true;
+      tls_container.appendChild(tlsCheckbox);
+
+      // Newline element
+      var br = document.createElement("br");
+      tls_container.appendChild(br);
+      }
+    }
+
+    function removeTLS() {
+
+      var tls_container = document.getElementById("tls-container");
+      var remove = ["label", "input", "br"];
+
+      for (var i = 0; i < remove.length; i++) {
+        var inputs = tls_container.getElementsByTagName(remove[i]);
+        tls_container.removeChild(inputs[inputs.length - 1]);
+        if (inputs.length > 0) { }
+      }
+
+    }
+
+    function addTarget(targetValue,queryValue) {
+
+    var minInt = 1;
+    var maxInt = 100000000;
+    var randomInt = Math.floor(minInt + Math.random() * (maxInt - minInt + 1));
+    var noquery = []
+
+    // Date/Time object used to tie target source and queries together
+    var timeDate = Date.now()
+    var input_container = document.getElementById("input-container");
+
+    // Select form element for Target source
+    var targetSelect = document.createElement("select");
+    targetSelect.className = "break-line";
+    targetSelect.name = randomInt + "_query_" + timeDate;
+    targetSelect.id = randomInt + "_query_" + timeDate;
+
+    var target = document.createElement("option");
+    target.text = "Select a target";
+    target.value = "NONE";
+    targetSelect.add(target);
+
+    // Newline element
+    const newLine = document.createElement('br');
+    newLine.id = randomInt + "_nl_" + timeDate;
+
+    
+    {{range .targets}}
+      var t = "{{.}}";
+      var targets = t.split(":");
+
+      var target = document.createElement("option");
+
+      if (targets[1] == 'true'){
+        target.text = targets[0] ;
+        target.value = targets[0];
+        targetSelect.add(target);
+      }else{
+        target.text = targets[0] + " (No Query)";
+        target.value = targets[0];
+        targetSelect.add(target);
+        noquery.push(targets[0])
+
+      }
+    {{end}}
+
+    function handleChange (event){
+
+      if (noquery.includes(targetSelect.value)){
+
+        var remove = document.createElement('button');
+        remove.id=randomInt + "_button_" + timeDate;
+        remove.textContent = 'Remove';
+        remove.className = "target_button";
+        remove.addEventListener('click', function(){
+        var ids = [targetSelect.id,remove.id,newLine.id]
+          removeID(ids)
+        })
+
+        input_container.appendChild(remove);
+        input_container.appendChild(newLine);
+
+      } else {
+
+        var queryInput = document.createElement("input");
+        queryInput.type = "text";
+        queryInput.name = randomInt + "_query_" + timeDate;
+        queryInput.id = randomInt + "_query_" + timeDate;
+        input_container.appendChild(queryInput);
+        input_container.appendChild(newLine);
+
+        if (queryValue != undefined) {
+          queryInput.value = queryValue;
+
+        }
+        var remove = document.createElement('button');
+        remove.id=randomInt + "_button_" + timeDate;
+        remove.textContent = 'Remove';
+        remove.className = "target_button";
+        remove.addEventListener('click', function(){
+        var ids = [targetSelect.id, queryInput.name,remove.id,newLine.id]
+          removeID(ids)
+        })
+        input_container.appendChild(remove);
+        input_container.appendChild(newLine);
+          } 
+
+      targetSelect.disabled = true;
+      disabled_targets.push(targetSelect.id)
+      input_container.appendChild(newLine);
+      }
+    
+
+    input_container.appendChild(targetSelect);
+    input_container.appendChild(newLine);
+    targetSelect.addEventListener("change", handleChange);
+      
+      
+    if (targetValue != undefined) {
+          targetSelect.value = targetValue
+          handleChange();
+        }
+
+    input_container.appendChild(newLine);
+}
+
+    function addBanner(probefile) {
+
+      // Banner form container
+      var banner_container = document.getElementById("banner-container");
+
+      if (banner_container.childNodes.length == 1) {
+
+
+      //Banner label for user
+      var enableLabel = document.createElement("label");
+      enableLabel.innerHTML = "Banner Scanning Enabled. If scanning with a probe, enter it below, leave blank if not.";
+      banner_container.appendChild(enableLabel);
+
+      // Hidden checkbox to show Banner is enabled
+      var bannerCheckbox = document.createElement("input");
+      bannerCheckbox.setAttribute("type", "checkbox");
+      bannerCheckbox.setAttribute("name", "Banner_Enabled");
+      bannerCheckbox.style.display = "none";
+      bannerCheckbox.checked = true;
+      banner_container.appendChild(bannerCheckbox);
+
+      // Newline element
+      var newLine = document.createElement("br");
+      banner_container.appendChild(newLine);
+
+      // Textarea box to for probe
+      var probe = document.createElement("textarea");
+      probe.id = "probe";
+      probe.name = "banner_probe";
+      probe.rows = 10;
+      probe.columns = 40;
+      probe.placeholder = "Enter the probe to send here, in hex format \\xff\\xff\\xff (leave blank if none)"
+
+      if ((probefile.length) > 0){
+        probe.value=probefile;
+      }
+
+      banner_container.appendChild(probe);
+
+      // Newline element
+      var newLine = document.createElement("br");
+      banner_container.appendChild(newLine);
+      }
+
+    }
+
+    function removeBanner() {
+
+      var input_container = document.getElementById("banner-container");
+      var remove = ["label", "input", "br", "textarea", "br"];
+
+      for (var i = 0; i < remove.length; i++) {
+        var inputs = input_container.getElementsByTagName(remove[i]);
+        input_container.removeChild(inputs[inputs.length - 1]);
+        if (inputs.length > 0) { }
+      }
+    }
+
+    function addHTTP(methodValue,endpointValue,useragentValue,bodyValue,headerValue,httpsValue) {
+
+      // HTTP form container
+      var http_container = document.getElementById("http-container");
+      if (http_container.childNodes.length == 1) {
+
+      // HTTP label for user
+      var enableLabel = document.createElement("label");
+      enableLabel.innerHTML = "HTTP Scanning Enabled. Please set the below configuration options";
+      http_container.appendChild(enableLabel);
+
+      // Hidden checkbox to indicate HTTP is enabled
+      var httpCheckbox = document.createElement("input");
+      httpCheckbox.setAttribute("type", "checkbox");
+      httpCheckbox.setAttribute("name", "HTTP_Enabled");
+      httpCheckbox.style.display = "none";
+      httpCheckbox.checked = true;
+      http_container.appendChild(httpCheckbox);
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Label for method selection
+      var method_label = document.createElement("label");
+      method_label.textContent = "HTTP Method"
+      method_label.setAttribute("for", "http_method")
+      http_container.appendChild(method_label);
+
+      // HTTP method form element
+      var method = document.createElement("select");
+      method.name = "http_method";
+
+      var get = document.createElement("option");
+      get.text = "GET";
+      get.value = "GET";
+      method.add(get);
+
+      var post = document.createElement("option");
+      post.text = "POST";
+      post.value = "POST";
+      method.add(post);
+
+      // Sets default value as "GET"
+      method.value = "GET"
+      http_container.appendChild(method);
+
+      if (methodValue != undefined){
+        method.value=methodValue;
+      }
+
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Label for HTTPS scanning
+      var https_label = document.createElement("label");
+      https_label.textContent = "HTTPs Scanning"
+      https_label.setAttribute("for", "http_https")
+      http_container.appendChild(https_label);
+
+      // HTTPS form element
+      var https = document.createElement("select");
+      https.name = "http_https";
+
+      var yes = document.createElement("option");
+      yes.text = "Yes";
+      yes.value = "Yes";
+      https.add(yes);
+
+      var no = document.createElement("option");
+      no.text = "No";
+      no.value = "No";
+      https.add(no);
+
+      // Sets default value to "Yes"
+      https.value = "Yes"
+
+      if (httpsValue != undefined){
+        https.value=httpsValue;
+      }
+      
+      http_container.appendChild(https);
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Endpoint label
+      var endpoint_label = document.createElement("label");
+      endpoint_label.textContent = "Enter endpoint / resource (leave blank if none)"
+      endpoint_label.setAttribute("for", "http_endpoint")
+      http_container.appendChild(endpoint_label);
+
+      // Endpoint form element
+      var endpoint = document.createElement("input");
+      endpoint.type = "text";
+      endpoint.name = "http_endpoint";
+      endpoint.placeholder = "/this/is/a/test.php"
+      http_container.appendChild(endpoint);
+
+      if (endpointValue != undefined){
+        endpoint.value=endpointValue;
+      }
+      
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Useragent label
+      var useragent_label = document.createElement("label");
+      useragent_label.textContent = "Enter useragent (leave blank if none)"
+      useragent_label.setAttribute("for", "http_useragent")
+      http_container.appendChild(useragent_label);
+
+      // Useragent form element
+      var useragent = document.createElement("input");
+      useragent.type = "text";
+      useragent.name = "http_useragent";
+      useragent.placeholder = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0"
+      http_container.appendChild(useragent);
+
+
+      if (useragentValue != undefined){
+        useragent.value=useragentValue;
+      }
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // HTTP Headers label
+      var headers_label = document.createElement("label");
+      headers_label.textContent = "Enter custom headers, one per line in the format of 'header : value' (leave blank if none)"
+      headers_label.setAttribute("for", "http_headers")
+      http_container.appendChild(headers_label);
+
+      // HTTP headers form element
+      var headers = document.createElement("textarea");
+      headers.id = "headers";
+      headers.name = "http_headers";
+      headers.rows = 10;
+      headers.columns = 40;
+      headers.placeholder = "server: nginx"
+
+      http_container.appendChild(headers);
+
+      if (headerValue != undefined){
+        headers.value=headerValue;
+      }
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+      // Label for HTTP Body
+      var body_label = document.createElement("label");
+      body_label.textContent = "Enter request body (leave blank if none). Can be in ASCII or hex (\\xff\\xff)."
+      body_label.setAttribute("for", "http_body")
+      http_container.appendChild(body_label);
+
+      // HTTP Body form element
+      var body = document.createElement("textarea");
+      body.id = "body";
+      body.name = "http_body";
+      body.rows = 10;
+      body.columns = 40;
+      body.placeholder = "send me or \\x73\\x65\\x6e\\x64\\x20\\x6d\\x65"
+
+      http_container.appendChild(body);
+
+      if (bodyValue != undefined){
+        body.value=bodyValue;
+      }
+
+      // Newline element
+      var newLine = document.createElement("br");
+      http_container.appendChild(newLine);
+
+    }
+  }
+
+    function removeHTTP() {
+      var input_container = document.getElementById("http-container");
+      var remove = ["label", "label", "input", "br", "label", "select", "br", "br", "select", "br", "br", "label", "input", "br", "br", "label", "input", "br", "br", "label", "textarea", "br", "br", "label", "textarea", "br"];
+
+      for (var i = 0; i < remove.length; i++) {
+        var inputs = input_container.getElementsByTagName(remove[i]);
+        input_container.removeChild(inputs[inputs.length - 1]);
+        if (inputs.length > 0) { }
+      }
+    }
+
+    function addQuery(tableValue,queryValue) {
+
+      var minInt = 1;
+      var maxInt = 100000000;
+      var randomInt = Math.floor(minInt + Math.random() * (maxInt - minInt + 1));
+
+      // Datetime object used to tie detection table to query
+      var timeDate = Date.now()
+      var name = randomInt + "_detection_" + timeDate;
+
+      // Query form element
+      var query_container = document.getElementById("query-container");
+      var newLine = document.createElement("br");
+      newLine.id = randomInt + "_nl_" + timeDate;
+
+      // Label for table
+      var table_label = document.createElement("label");
+      table_label.textContent = "Enter table for query"
+      table_label.setAttribute("for", name)
+      table_label.id= randomInt + "_table_label_" + timeDate;
+      query_container.appendChild(table_label);
+
+      // Query table form element
+      var table = document.createElement("select");
+      table.name = name;
+      table.id = randomInt + "_table_" + timeDate;;
+
+      var banner = document.createElement("option");
+      banner.text = "banner";
+      banner.value = "banner";
+      table.add(banner);
+
+      var tls = document.createElement("option");
+      tls.text = "tls";
+      tls.value = "tls";
+      table.add(tls);
+
+      var http = document.createElement("option");
+      http.text = "http";
+      http.value = "http";
+      table.add(http);
+
+      var jarm = document.createElement("option");
+      jarm.text = "jarm";
+      jarm.value = "jarm";
+      table.add(jarm);
+
+      query_container.appendChild(table);
+
+      if (tableValue != undefined){
+        table.value = tableValue
+      }
+
+      query_container.appendChild(newLine);
+      query_container.appendChild(newLine);
+
+      // Label for table query
+      var query_label = document.createElement("label");
+      query_label.textContent = "Enter query (follows postgres format do not need to provide the 'Select' and 'From' clauses.)"
+      query_label.setAttribute("for", name);
+      query_label.id = randomInt + "query_label" + timeDate;
+      query_container.appendChild(query_label);
+
+      // Table query form element
+      var query = document.createElement("input");
+      query.type = "text";
+      query.name = name;
+      query.id = randomInt + "_query" + timeDate;
+      query.placeholder = 'banner_text ilike "send%"'
+      query_container.appendChild(query);
+
+      if (queryValue != undefined){
+        query.value = queryValue
+      }
+
+      // Newline element
+      query_container.appendChild(newLine);
+      query_container.appendChild(newLine);
+
+      var remove = document.createElement('button');
+      remove.id=randomInt + "_button_" + timeDate;
+      remove.textContent = 'Remove';
+      remove.className = "target_button";
+      remove.addEventListener('click', function(){
+      var ids = [table_label.id,table.id,query_label.id,query.id,newLine.id,remove.id]
+            removeID(ids)
+          })
+      query_container.appendChild(remove);
+      query_container.appendChild(newLine);
+      query_container.appendChild(newLine);
+
+
+        } 
+
+    function addCustom(customValue) {
+
+      var minInt = 1;
+      var maxInt = 100000000;
+      var randomInt = Math.floor(minInt + Math.random() * (maxInt - minInt + 1));
+      var timeDate = Date.now()
+
+      var custom_container = document.getElementById("custom-container");
+
+      var newLine = document.createElement("br");
+      newLine.id = randomInt + "_nl_" + timeDate;
+
+      var customSelect = document.createElement("select");
+      customSelect.name = randomInt + "_custom_" + timeDate;
+      customSelect.id = randomInt + "_custom_" + timeDate;
+
+      var custom = document.createElement("option");
+      custom.text = "Select a custom detection";
+      custom.value = "NONE";
+      customSelect.add(custom);
+
+      {{range .custom}}
+        var custom = document.createElement("option");
+        custom.text = "{{.}}" ;
+        custom.value = "{{.}}";
+        customSelect.add(custom);
+      {{end}}
+
+
+      if (customValue != undefined){
+        customSelect.value = customValue;
+      }
+
+      custom_container.appendChild(customSelect);
+      custom_container.appendChild(newLine);
+      
+      var remove = document.createElement('button');
+      remove.id=randomInt + "_button_" + timeDate;
+      remove.textContent = 'Remove';
+      remove.className = "target_button";
+      remove.addEventListener('click', function(){
+      var ids = [customSelect.id,remove.id,newLine.id]
+            removeID(ids)
+          })
+
+      custom_container.appendChild(remove);
+      custom_container.appendChild(newLine);
+    }
+
+    function removeID(ids) {
+      ids.forEach(function(id){
+        let t = document.getElementById(id);
+        if (t) {t.remove();}
+
+      })
+    }
+
+  </script>
+
+  <h1>Add a new Signature</h1>
+  <!--<form action="/AddSig" method="post">-->
+  <form id="newSig">
+    <div class="form-container">
+      <div class="form-column">
+        <h2>General Information<h2>
+            <label for="Rule_Name">Rule Name</label>
+            <input type="text" id="Rule_Name" name="Rule_Name"><br>
+            <label for="Malware_Family">Malware Family</label>
+            <input type="text" id="Malware_Family" name="Malware_Family"><br>
+            <label for="classification">Classification</label>
+            <select name="classification" id="classification">
+              <option>Select an option</option>
+              <option value="RAT">RAT</option>
+              <option value="Backdoor">Backdoor</option>
+              <option value="OST">OST</option>
+              <option value="Infostealer">Infostealer</option>
+              <option value="Admin / Panel">Admin / Panel</option>
+              <option value="Vulnerability / Exploit">Vulnerability / Exploit</option>
+              <option value="Webshell">Webshell</option>
+              <option value="Other">Other</option>
+            </select><br><br>
+            <label for="Description">Description</label>
+            <textarea name="Description" id="Description" cols="20" rows="4"></textarea><br>
+            <label for="References">References (one per line)</label>
+            <textarea name="References" id="References" cols="30" rows="4"></textarea><br>
+            <label for="Created_Date">Created Date</label>
+            <input type="text" id="Created_Date" name="Created_Date" disabled><br>
+            <label for="Edit_Date">Edited Date</label>
+            <input type="text" id="Edit_Date" name="Edit_Date" disabled><br>
+      </div>
+      <div class="form-column">
+        <h2>Targets (Choose Source and Enter Query)<h2></h2>
+          <div id="input-container">
+          </div>
+          <br>
+          <button type="button" onclick="addTarget()">Add Target Source</button>
+      </div>
+    </div>
+
+    <h2>Scanning Modules</h2>
+    <div class="form-container">
+      <div class="form-column">
+        <h3>Add Banner Scan</h3>
+        <div id="banner-container">
+        </div>
+        <button type="button" onclick="addBanner()">Enable Banner</button>
+        <button type="button" onclick="removeBanner()">Disable Banner</button>
+      </div>
+      <div class="form-column">
+        <h3>Add HTTP Scan</h3>
+        <div id="http-container">
+        </div>
+        <button type="button" onclick="addHTTP()">Enable HTTP</button>
+        <button type="button" onclick="removeHTTP()">Disable HTTP</button>
+      </div>
+    </div>
+
+    <div class="form-container">
+      <div class="form-column">
+        <h3>Add TLS Scan</h3>
+        <div id="tls-container">
+        </div>
+        <button type="button" onclick="addTLS()">Enable TLS</button>
+        <button type="button" onclick="removeTLS()">Disable TLS</button>
+      </div>
+      <div class="form-column">
+        <h3>Add JARM Scan</h3>
+        <div id="jarm-container">
+        </div>
+        <button type="button" onclick="addJARM()">Enable JARM</button>
+        <button type="button" onclick="removeJARM()">Disable JARM</button>
+      </div>
+    </div>
+
+    </div>
+
+    <h2>Detection Logic</h2>
+    <div class="form-container">
+      <div class="form-column">
+        <h3>Queries</h3>
+        <div id="query-container">
+          <label for="condition">Select the condition (any or all) </label>
+          <select id="condition" name="condition">
+            <option value="all">Any</option>
+            <option value="any">All</option>
+          </select>
+          <br><br>
+        </div>
+        <button type="button" onclick="addQuery()">Add Query</button>
+      </div>
+      <div class="form-column">
+        <h3>Custom Module</h3>
+        <div id="custom-container">
+          <br>
+        </div>
+        <button type="button" onclick="addCustom()">Add Custom Detection</button>
+      </div>
+    </div>
+    <input type="submit" value="Submit">
+  </form>
+
+  <script>
+
+    document.getElementById("newSig").addEventListener("submit", async function (event) {
+      event.preventDefault(); // Prevent the default form submission behavior
+
+      for (let element of disabled_targets){
+        var temp = document.getElementById(element)
+        temp.disabled = false;
+      }
+
+      var temp = document.getElementById("Created_Date")
+      temp.disabled = false;
+
+      var temp = document.getElementById("Edit_Date")
+      temp.disabled = false;
+
+
+      const formData = new URLSearchParams(new FormData(this))
+      formData.append("c2-auth", sessionStorage.getItem('jwtKey'));
+
+      try{
+        if (edited ){
+          formData.append("edited", true);
+        }
+      } catch(error){
+           formData.append("edited", false);
+      }
+
+      const response = await fetch('/AddSig', { method: 'POST', body: formData })
+      const data = await response.text()
+      if (data == "Success") {
+        togglePopup("createdsuccess");
+      }
+      else { 
+        togglePopup("createdfail");
+    
+      }
+    })
+
+  </script>
+{{end}}

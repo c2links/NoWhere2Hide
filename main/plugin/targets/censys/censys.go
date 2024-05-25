@@ -118,6 +118,10 @@ func (m CENSYS) Get_Name() string {
 	return "censys"
 }
 
+func (m CENSYS) Get_QueryBox() bool {
+	return true
+}
+
 func (m CENSYS) Run(c2_config *nowhere2hide.C2_Config, query string, runGUID string) []*nowhere2hide.Scan {
 
 	m.Init()

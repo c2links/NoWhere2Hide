@@ -1,0 +1,66 @@
+{{define "c2"}}
+<h1>C2 Results</h1>
+  <!-- 
+    Specify the table that will be used to display the people database
+  -->
+  <table class="PTABLE">
+
+    <th style="width:10%">Address</th>
+    <th style="width:5%">Port</th>
+    <th style="width:10%">Malware Family</th>
+    <th style="width:15%">Signature</th>
+    <th style="width:10%">First Seen</th>
+    <th style="width:10%">Last Seen</th>
+    </tr>
+  </table>
+  <br />
+  <!-- 
+    Script runs on each page load to update the people database
+   -->
+  <script>
+    c2s()
+
+    async function c2s() {
+
+      c2Table = document.querySelector("table")
+
+      for (var i = 1; i < c2Table.rows.length;) {
+        c2Table.deleteRow(i);
+      }
+
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const mf = urlParams.get('malware_family');
+
+      const response = await fetch("/C2query", { method: "POST", body: new URLSearchParams({ 'malware': mf }) })
+      const data = await response.json()
+      data.forEach(c2 => {
+        // Create the table row
+        row = document.createElement("tr")
+        // Create the table data elements and extract corresponding values from received `person`
+        ip = document.createElement("td")
+        ip.innerHTML = c2.IP
+        port = document.createElement("td")
+        port.innerHTML = c2.Port
+        family = document.createElement("td")
+        family.innerHTML = c2.Malware_Family
+        rule = document.createElement("td")
+        rule.innerHTML = c2.Rule_Name
+        first = document.createElement("td")
+        first.innerHTML = c2.First_Seen
+        last = document.createElement("td")
+        last.innerHTML = c2.Last_Seen
+        
+        // Add the data elements to the row
+        row.appendChild(ip)
+        row.appendChild(port)
+        row.appendChild(family)
+        row.appendChild(rule)
+        row.appendChild(first)
+        row.appendChild(last)
+        // Add the row element to the table
+        c2Table.appendChild(row)
+      })
+    }
+  </script>
+  {{end}}
