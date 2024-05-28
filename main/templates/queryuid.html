@@ -1,5 +1,5 @@
 {{define "queryuid"}}
-    <h1>Scan Results for {{.uid}} </h1>
+<h1>Scan Results for {{.uid}} </h1>
 
     <div class="tables-container">
         <div class="table-section">
@@ -64,6 +64,7 @@
                 <thead>
                     <tr>
                         <th>fingerprint</th>
+                        <!-- Add other JARM fields here -->
                     </tr>
                 </thead>
             </table>
@@ -93,11 +94,11 @@
         <br>
     <label for="predefined-query-select">Predefined Queries:</label>
     <select id="predefined-query-select" onchange="setPredefinedQuery()">
-        <option value="">Select a query</option>
-        <option value="SELECT uid,address,port,version,serial_number,issuer_common_name,issuer_country,issuer_organization,issuer_organization, issuer_dn,subject_common_name,subject_country, subject_organization, subject_dn, fingerprint_sha256, ja4x, timestamp  FROM tls WHERE uid = '{{.uid}}'">SELECT * FROM tls WHERE UID = {{.uid}}</option>
-        <option value="SELECT uid,address,port,status,banner_hex,banner_text,banner_length,timestamp FROM banner WHERE uid='{{.uid}}'">SELECT * FROM banner WHERE UID = {{.uid}}</option>
-        <option value="SELECT uid,address,port,status_code,protocol_name,headers,body,body_sha256,timestamp FROM http WHERE uid='{{.uid}}'">SELECT * FROM http WHERE UID = {{.uid}}</option>
-        <option value="SELECT uid,address,port,fingerprint,timestamp FROM jarm WHERE uid='{{.uid}}'">SELECT * FROM jarm WHERE UID = {{.uid}}</option>
+            <option value="">Select a query</option>
+            <option value="SELECT uid,address,port,version,serial_number,issuer_common_name,issuer_country,issuer_organization,issuer_organization, issuer_dn,subject_common_name,subject_country, subject_organization, subject_dn, fingerprint_sha256, ja4x, timestamp  FROM tls WHERE uid = '{{.uid}}'">SELECT * FROM tls WHERE UID = {{.uid}}</option>
+            <option value="SELECT uid,address,port,status,banner_hex,banner_text,banner_length,timestamp FROM banner WHERE uid='{{.uid}}'">SELECT * FROM banner WHERE UID = {{.uid}}</option>
+            <option value="SELECT uid,address,port,status_code,protocol_name,headers,body,body_sha256,timestamp FROM http WHERE uid='{{.uid}}'">SELECT * FROM http WHERE UID = {{.uid}}</option>
+            <option value="SELECT uid,address,port,fingerprint,timestamp FROM jarm WHERE uid='{{.uid}}'">SELECT * FROM jarm WHERE UID = {{.uid}}</option>
     </select>
     
     <br><br>
@@ -110,6 +111,7 @@
     <button onclick="control()">Fetch Results</button>
     <br><br>
 
+    <p id="recordP"></p>
     <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button
     onclick="nextPage()">Next</button>
 
@@ -123,57 +125,60 @@
             <!-- Data will be populated dynamically -->
         </tbody>
     </table>
-    <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span> <button
-    onclick="nextPage()">Next</button>
+    <button onclick="prevPage()">Prev</button> Page <span id="currentDyn"></span> of <span id="totalDyn"></span>
+    <button onclick="nextPage()">Next</button>
 
     <script>
 
-        offset = 0;
-        current = 1;
-        limit=100;
+    var limit = 100;
+    var offset = 0;
+    var current = 1;
+    var totalcount;
+    var totalPages;
+
     
-        async function recordCountQ(query) {
-            const response = await fetch("/RecordCountQ", { method: "POST", body: new URLSearchParams({ 'query': query }) });
-            const record = await response.text();
-            return record;
+    async function recordCountQ(query) {
+        const response = await fetch("/RecordCountQ", { method: "POST", body: new URLSearchParams({ 'query': query }) });
+        const record = await response.text();
+        return record;
+    }
+
+    function encodeHTMLEntities(text) {
+        let textArea = document.createElement('textarea');
+        textArea.innerText = text;
+        let encodedOutput = textArea.innerHTML;
+        let arr = encodedOutput.split('<br>');
+        encodedOutput = arr.join('\n');
+        return encodedOutput;
+    }
+
+    function setPredefinedQuery() {
+        const predefinedQuerySelect = document.getElementById('predefined-query-select');
+        const customQueryInput = document.getElementById('custom-query-input');
+        customQueryInput.value = predefinedQuerySelect.value;
+    }
+
+    function nextPage() {
+
+        if (current < totalPages) {
+            current++;
+            offset = offset + limit;
+            document.getElementById("currentDyn").innerText = current;
+            control();
         }
+        else { control(); }
+    }
 
-        function encodeHTMLEntities(text) {
-            let textArea = document.createElement('textarea');
-            textArea.innerText = text;
-            let encodedOutput = textArea.innerHTML;
-            let arr = encodedOutput.split('<br>');
-            encodedOutput = arr.join('\n');
-            return encodedOutput;
+    function prevPage() {
+
+        if (current > 1) {
+            current--;
+            offset = offset - limit;
+            document.getElementById("currentDyn").innerText = current;
+            control();
         }
-
-        function setPredefinedQuery() {
-            const predefinedQuerySelect = document.getElementById('predefined-query-select');
-            const customQueryInput = document.getElementById('custom-query-input');
-            customQueryInput.value = predefinedQuerySelect.value;
+        else { control(); }
         }
-
-        function nextPage() {
-
-            if (current < totalPages) {
-                current++;
-                offset = offset + limit;
-                document.getElementById("currentDyn").innerText = current;
-                control();
-            }
-            else { control(); }
-            }
-
-        function prevPage() {
-
-            if (current > 1) {
-                current--;
-                offset = offset - limit;
-                document.getElementById("currentDyn").innerText = current;
-                control();
-            }
-            else { control(); }
-            }
 
         function control() {
 
