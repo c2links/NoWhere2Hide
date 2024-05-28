@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -9,6 +10,7 @@ import (
 	"nowhere2hide"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -721,4 +723,63 @@ func editsigHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+}
+
+func logViewHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the HTML template
+	templates = template.Must(template.ParseGlob("templates/*.html"))
+
+	// Execute the template
+	err := templates.ExecuteTemplate(w, "base.html", map[string]interface{}{"logview": "logview"})
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func getLogHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+
+	var filename string
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error parsing form"))
+		log.Info(fmt.Sprintf("UI Error -> %s", err))
+	}
+
+	uid := r.Form.Get("uid")
+	logType := r.Form.Get("logType")
+
+	if logType == "run" {
+		filename = "../logs/run.log"
+	}
+
+	if logType == "collect" {
+		filename = "../logs/collect.log"
+	}
+
+	if logType == "scan" {
+		filename = "../logs/scanner.log"
+	}
+
+	if logType == "detect" {
+		filename = "../logs/detect.log"
+	}
+
+	file, _ := os.Open(filename)
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var matches []string
+	re := regexp.MustCompile(fmt.Sprintf(`\b%s\b`, uid))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if re.MatchString(line) {
+			matches = append(matches, line)
+		}
+	}
+
+	logBytes, _ := json.Marshal(matches)
+	w.Write(logBytes)
+
 }

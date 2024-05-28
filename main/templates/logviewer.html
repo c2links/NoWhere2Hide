@@ -1,0 +1,48 @@
+{{define "logview"}}
+  <h1>Log Viewer</h1>
+  <form id="logForm">
+    <label for="logType">Log Type:</label>
+    <select name="logType" id="logType">
+      <option value="run">Run Logs</option>
+      <option value="collect">Collection Logs</option>
+      <option value="scan">Scanner Logs</option>
+      <option value="detect">Detection Logs</option>
+    </select><br><br>
+
+    <label for="uid">Enter UID of job to search for:</label>
+    <input type="text" name="uid" id="uid" required><br><br>
+
+    <input type="submit" value="Submit">
+  </form>
+
+  <br>
+  
+  <label for="results">Results:</label>
+  <textarea id="results" readonly  style="width: 80%; height: 800px;"></textarea>
+
+  <script>
+    async function getLogs(){
+
+      event.preventDefault();
+     
+      const resultsTextArea = document.getElementById('results');
+      resultsTextArea.value = "";
+
+      const logType = document.getElementById('logType').value;
+      const uid = document.getElementById('uid').value;
+
+      const response = await fetch("/GetLogs", { method: "POST", body: new URLSearchParams({'c2-auth': sessionStorage.getItem('jwtKey'), 'uid': uid, 'logType': logType }) })
+      const data = await response.json() // Read the JSON body of the response
+      data.forEach(item => {
+        resultsTextArea.value += item + "\n\n"; // Append each item with a newline
+        });
+
+    //resultsTextArea.value = data.join('\n');
+      
+    }
+
+    const myForm = document.getElementById('logForm');
+    myForm.addEventListener('submit', getLogs); 
+
+  </script>
+{{end}}

@@ -108,6 +108,7 @@ func getCustomDetection() []string {
 	return detections
 
 }
+
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -157,6 +158,7 @@ func newRouter() *mux.Router {
 	r.Handle("/AddSig", authMiddleware(http.HandlerFunc(addSigHandler))).Methods("POST")
 	r.HandleFunc("/GetSig", getSigHandler).Methods("POST")
 	r.Handle("/ClearDB", authMiddleware(http.HandlerFunc(clearDBQueryHandler))).Methods("POST")
+	r.Handle("/GetLogs", authMiddleware(http.HandlerFunc(getLogHandler)))
 
 	// UI / HTML Template Handlers
 	r.HandleFunc("/", homeHandler).Methods("GET")
@@ -171,6 +173,7 @@ func newRouter() *mux.Router {
 	r.HandleFunc("/newsig", newsigHandler).Methods("GET")
 	r.HandleFunc("/viewsigs", viewsigsHandler).Methods("GET")
 	r.HandleFunc("/editsig", editsigHandler).Methods("GET")
+	r.HandleFunc("/logview", logViewHandler).Methods("GET")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
 	http.Handle("/", r)

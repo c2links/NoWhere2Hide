@@ -847,3 +847,46 @@ func Query(table string, query string) ([]nowhere2hide.DB_Gen, error) {
 	db.Close()
 	return results, nil
 }
+
+func ExecuteQuery(query string) ([]nowhere2hide.DB_Gen, error) {
+
+	connString := utils.GetConnectionString()
+	db, err := sql.Open("postgres", connString)
+
+	if err != nil {
+		defer db.Close()
+		return nil, err
+	}
+
+	// close database
+	defer db.Close()
+
+	// check db
+	err = db.Ping()
+	if err != nil {
+		defer db.Close()
+		return nil, err
+	}
+
+	var results []nowhere2hide.DB_Gen
+	rows, err := db.Query(fmt.Sprintf("select uid, address, port, timestamp %s", query))
+
+	if err != nil {
+		defer db.Close()
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var result nowhere2hide.DB_Gen
+		if err := rows.Scan(&result.Uid, &result.Address, &result.Port, &result.Timestamp); err != nil {
+			db.Close()
+			return nil, err
+		}
+		results = append(results, result)
+
+	}
+	db.Close()
+	return results, nil
+}
