@@ -13,7 +13,9 @@ That being said, I've also tailored this tool for individuals like myself who co
 
 ## See it live -> https://www.nowhere2hide.info:6332/
 
-# Installation Overview
+# Installation
+
+## Local Deployment
 
 Tested and validated on Ubuntu 22.04, but should work wherever GO and Postgres can be installed.
 
@@ -22,15 +24,15 @@ I have created two videos to go over the installation process.
 - Install GO: https://www.youtube.com/watch?v=DKvg6YVCwiU
 - Install NoWhere2Hide: https://www.youtube.com/watch?v=CF4MWWnOs-w
 
-## Install GO
+### Install GO
 
 Follow instructions -> https://go.dev/doc/install
 
-## Clone Project
+### Clone Project
 
 ```git clone https://github.com/c2links/NoWhere2Hide.git```
 
-## Install and Setup Postgres
+### Install and Setup Postgres
 
 ```
 sudo apt update
@@ -43,7 +45,7 @@ y
 sudo -u postgres psql -c "ALTER USER nowhere2hide PASSWORD 'nowhere2hide';"
 sudo -u postgres createdb nowhere2hide
 ```
-## Rebuild Plugins
+### Rebuild Plugins
 
 NoWhere2Hide uses plugins for both collection and advanced detections. When you first run the program you will most likely get a error about the plugins being related to a different version. 
 
@@ -57,7 +59,7 @@ go build -buildmode=plugin -o plugin/targets/ipsum/ipsum.so plugin/targets/ipsum
 go build -buildmode=plugin -o plugin/c2/Trochilus/trochilus_banner.so plugin/c2/Trochilus/trochilus_banner.go 
 ```
 
-## Add API keys
+### Add API keys
 
 While not necessary, if you have API keys (currently only support Shodan, Censys and HuntIO), you should add them in the `api.yaml` file. The current format of the file is below.
 
@@ -68,7 +70,7 @@ shodan: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 huntio: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-# Run
+### Run
 
 To build and run, enter the below commands
 
@@ -83,7 +85,7 @@ You can additionally set the port to use by supplying the port as a argument `./
 
 By default the signatures are located in the folder, "../signatures", but this can also be changed by supplying the "signatures argument, `./main -signatures <path to signatures>`
 
-# Authentication
+### Authentication
 
 NoWhere2Hide uses token(ish) authentication for most of its capabilities. A token is generated for you when you first start the program. The token is printed to the console for easy access but can be retrieved from the Postgres database at anytime.
 
@@ -109,6 +111,53 @@ To authenticate, simply click on the "Click here to login" button and enter your
 If all goes well the click here to logon button changes to the below (Logged In (click to logout))
 
 ![](.images/logon_success.png)
+
+
+## Install Using Docker Compose (Method 1)
+
+This method involves cloning this who repo locally to build the docker container - recommend this method when doing development work
+
+### Steps:
+
+1. `git clone git@github.com:c2links/NoWhere2Hide.git && cd NoWhere2Hide`
+2. Create a .env file and add the following to it:
+   - If you don't have the key for a particular service, leave it blank.
+```
+POSTGRES_USER: nowhere2hide
+POSTGRES_PWD: nowhere2hide
+CENSYS_API_ID: <your censys api id>
+CENSYS_SECRET: <your censys secret>
+SHODAN: <your shodan api key>
+HUNTIO: <your huntio api key>
+```
+3. Spin up docker compose: `sudo docker compose up -d`
+   - Might need to wait a minute or 2 for things to get spun up.
+4. Get the authentication code: `sudo docker exec nowhere2hide-hunter-1 cat /app/NoWhere2Hide/logs/auth.log`
+   - if your docker instance is called something else, make sure to change the name in the command above
+5. Open Firefox and go to http://localhost:6332/
+
+## Install Using Docker Compose (Method 2)
+
+This method involves checking out a smaller repo that contains just the necessary docker files to build and launch the project in docker.
+
+### Steps:
+
+1. `git clone git@github.com:xorhex/Docker_NoWhere2Hide.git && cd Docker_NoWhere2Hide`
+2. Create a .env file and add the following to it:
+   - If you don't have the key for a particular service, leave it blank.
+```
+POSTGRES_USER: nowhere2hide
+POSTGRES_PWD: nowhere2hide
+CENSYS_API_ID: <your censys api id>
+CENSYS_SECRET: <your censys secret>
+SHODAN: <your shodan api key>
+HUNTIO: <your huntio api key>
+```
+3. Spin up docker compose: `sudo docker compose up -d`
+   - Might need to wait a minute or 2 for things to get spun up.
+4. Get the authentication code: `sudo docker exec docker_nowhere2hide-hunter-1 cat /app/NoWhere2Hide/logs/auth.log`
+   - if your docker instance is called something else, make sure to change the name in the command above
+5. Open Firefox and go to http://localhost:6332/
 
 
 # Overview
