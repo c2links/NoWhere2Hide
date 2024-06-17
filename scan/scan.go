@@ -201,6 +201,23 @@ func zgrab2_scanner(scans []*nowhere2hide.Scan, runGUID string) chan nowhere2hid
 					opts = append(opts, sj.Config.Scan_HTTP.Endpoint)
 					opts = append(opts, "--raw-headers")
 
+					if len(sj.Config.Scan_HTTP.Custom_Headers) > 0 {
+
+						header_names := ""
+						header_values := ""
+
+						for _, header := range sj.Config.Scan_HTTP.Custom_Headers {
+							header_names += header.Field + ","
+							header_values += header.Value + ","
+						}
+
+						opts = append(opts, "--custom-headers-names")
+						opts = append(opts, header_names[:len(header_names)-1])
+
+						opts = append(opts, "--custom-headers-values")
+						opts = append(opts, header_values[:len(header_values)-1])
+					}
+
 					if sj.Config.Scan_HTTP.Useragent != "" {
 						opts = append(opts, "--user-agent")
 						opts = append(opts, sj.Config.Scan_HTTP.Useragent)
@@ -360,25 +377,25 @@ func zgrab2_add_scan_data(outputQueue chan nowhere2hide.GeneralResponse, runGUID
 
 	log.Info(fmt.Sprintf("Scan|%s|AddDB|info|loaded scan data in databases\n", runGUID))
 
-	err = db.Remove_TLS_Duplicates(dbConn)
-	if err != nil {
-		log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping TLS databse -> %s\n", runGUID, err))
-	}
+	//err = db.Remove_TLS_Duplicates(dbConn)
+	//if err != nil {
+	//	log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping TLS databse -> %s\n", runGUID, err))
+	//}
 
-	err = db.Remove_Banner_Duplicates(dbConn)
-	if err != nil {
-		log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping Banner databse -> %s\n", runGUID, err))
-	}
+	//err = db.Remove_Banner_Duplicates(dbConn)
+	//if err != nil {
+	//	log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping Banner databse -> %s\n", runGUID, err))
+	//}
 
-	err = db.Remove_HTTP_Duplicates(dbConn)
-	if err != nil {
-		log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping HTTP databse -> %s\n", runGUID, err))
-	}
+	//err = db.Remove_HTTP_Duplicates(dbConn)
+	//if err != nil {
+	//	log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping HTTP databse -> %s\n", runGUID, err))
+	//}
 
-	err = db.Remove_JARM_Duplicates(dbConn)
-	if err != nil {
-		log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping JARM databse -> %s\n", runGUID, err))
-	}
+	//err = db.Remove_JARM_Duplicates(dbConn)
+	//if err != nil {
+	//	log.Info(fmt.Sprintf("Scan|%s|AddDB|error|Error deduping JARM databse -> %s\n", runGUID, err))
+	//}
 
 }
 

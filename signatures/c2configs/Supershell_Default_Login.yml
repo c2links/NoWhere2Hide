@@ -1,0 +1,40 @@
+rule_name: Supershell_Default_Login
+guid: 80f1a654-778d-4c7d-84b6-ea5e2cfee761
+family: Supershell
+version: ""
+description: 'Supershell is an open-source, web-based command-and-control (C2) platform
+  used for remote access and control of infected systems. '
+classification: Backdoor
+references:
+- ""
+created: "2024-06-06 00:00:59"
+last_edit: "2024-06-06 10:29:39"
+targets:
+- source: censys
+  targetquery:
+  - services.http.response.body_hashes="sha256:6084d5352ce347a3f6b9f7b789acc8b422b748a0cd99549f2ea534e439b8999b"
+scan_banner:
+  enabled: false
+  probefile: ""
+scan_http:
+  enabled: true
+  method: GET
+  endpoint: /supershell/login
+  useragent: ""
+  body: ""
+  custom_headers: []
+  failhttptohttps: false
+  retryhttps: true
+  https: false
+scan_tls:
+  enabled: false
+scan_jarm:
+  enabled: false
+detection:
+  module: false
+  module_name: []
+  simple: true
+  condition: all
+  queries:
+  - table: http
+    query: body_sha256 = '6084d5352ce347a3f6b9f7b789acc8b422b748a0cd99549f2ea534e439b8999b'

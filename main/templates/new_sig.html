@@ -220,9 +220,13 @@
       probe.rows = 10;
       probe.columns = 40;
       probe.placeholder = "Enter the probe to send here, in hex format \\xff\\xff\\xff (leave blank if none)"
-
-      if ((probefile.length) > 0){
-        probe.value=probefile;
+      
+      try{
+        if ((probefile.length) > 0){
+          probe.value=probefile;
+        }
+      } catch (error){
+        console.log(error)
       }
 
       banner_container.appendChild(probe);
@@ -723,8 +727,12 @@
 
       for (let element of disabled_targets){
         var temp = document.getElementById(element)
-        temp.disabled = false;
+        try{
+          temp.disabled = false;
+        }catch (error){
+        console.log(error)
       }
+    }
 
       var temp = document.getElementById("Created_Date")
       temp.disabled = false;

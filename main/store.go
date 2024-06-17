@@ -241,7 +241,7 @@ func (store *dbStore) ExecuteQuery(query string, limit string, offset string) (Q
 
 func (store *dbStore) GetJobs() ([]*Job_Status, error) {
 
-	rows, err := store.db.Query("SELECT uid, configs,job_started,config_validated,targets_acquired,scan_started,scan_finished,detection_started,detection_finished,job_completed,errors FROM status ORDER BY job_started DESC LIMIT 20")
+	rows, err := store.db.Query("SELECT uid, configs,job_started,config_validated,targets_acquired,scan_started,scan_finished,detection_started,detection_finished,job_completed,errors FROM status ORDER BY job_started DESC LIMIT 500")
 	if err != nil {
 		return nil, err
 	}

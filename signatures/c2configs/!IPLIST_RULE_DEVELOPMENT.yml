@@ -1,5 +1,5 @@
 rule_name: '!IPLIST_RULE_DEVELOPMENT'
-guid: 4ada83ae-63b5-434d-a8fb-9884ae13d2a5
+guid: b200d5ae-8b8d-4737-bbe0-61367e6d0a4f
 family: Undefined
 version: ""
 description: Use this rule to scan a block of IP's for rule development. All scanning
@@ -8,11 +8,11 @@ classification: Other
 references:
 - ""
 created: "2024-05-02 16:00:35"
-last_edit: "2024-05-24 14:56:24"
+last_edit: "2024-05-31 16:14:17"
 targets:
 - source: iplist
   targetquery:
-  - 192.168.201.130:8888
+  - 192.168.60.160:12345
 scan_banner:
   enabled: true
   probefile: ""
@@ -20,7 +20,8 @@ scan_http:
   enabled: true
   method: GET
   endpoint: /
-  useragent: ""
+  useragent: Mozilla/4.0 (compatible; MSIE 9.0; Windows NT 10.0; .NET4.0C; .NET4.0E;
+    .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729)
   body: ""
   custom_headers: []
   failhttptohttps: false
