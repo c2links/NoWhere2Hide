@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    shm_size: 128mb
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PWD}
+      - POSTGRES_DB=nowhere2hide
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  hunter:
+    build: 
+      context: .
+    depends_on: 
+      - db
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=nowhere2hide
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PWD=${POSTGRES_PWD}
+      - CENSYS_API_ID=${CENSYS_API_ID}
+      - CENSYS_SECRET=${CENSYS_SECRET}
+      - SHODAN=${SHODAN}
+      - HUNTIO=${HUNTIO}
+      - NW2H_AUTH=true
+    ports:
+      - "6332:6332"
+    volumes:
+      - sigs:/app/NoWhere2Hide/signatures/c2configs
+      - logs:/app/NoWhere2Hide/logs/
+
+volumes:
+  db:
+    driver: local
+  sigs:
+  logs:
