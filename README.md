@@ -119,7 +119,7 @@ This method involves cloning this who repo locally to build the docker container
 
 ### Steps:
 
-1. `git clone git@github.com:c2links/NoWhere2Hide.git && cd NoWhere2Hide`
+1. `git clone https://github.com/c2links/NoWhere2Hide.git && cd NoWhere2Hide`
 2. Create a .env file and add the following to it:
    - If you don't have the key for a particular service, leave it blank.
 ```
@@ -142,7 +142,7 @@ This method involves checking out a smaller repo that contains just the necessar
 
 ### Steps:
 
-1. `git clone git@github.com:xorhex/Docker_NoWhere2Hide.git && cd Docker_NoWhere2Hide`
+1. `git clone https://github.com/xorhex/Docker_NoWhere2Hide.git && cd Docker_NoWhere2Hide`
 2. Create a .env file and add the following to it:
    - If you don't have the key for a particular service, leave it blank.
 ```
