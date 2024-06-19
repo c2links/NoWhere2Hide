@@ -8,8 +8,9 @@
 }
 
 .query-input {
-  width: 200px; /* Adjust the width as needed */
-  height: 200px;
+  width: 80%; /* Adjust the width as needed */
+  height: 100px;
+  font-size: 18px;
 }
 
 .tables-container {
